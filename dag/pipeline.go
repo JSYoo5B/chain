@@ -112,7 +112,7 @@ func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction str
 
 const parentRunner = "PipelineParentRunner"
 
-func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, direction string, runError error) {
+func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, direction string, lastErr error) {
 	if _, exists := p.runPlans[initAction]; !exists {
 		return input, Error, errors.New("given initAction is not registered on constructor")
 	}
@@ -127,16 +127,17 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		terminate     = Terminate[T]()
 		currentAction Action[T]
 		nextAction    Action[T]
+		runErr        error
 		selectErr     error
 	)
 	logrus.Debugf("%s: Start running with `%s`", runnerName, initAction.Name())
 	for currentAction = initAction; currentAction != nil; currentAction = nextAction {
-		output, direction, runError = runAction(currentAction, ctx, input)
+		output, direction, runErr = runAction(currentAction, ctx, input)
 
 		nextAction, selectErr = p.selectNextAction(currentAction, direction)
 		if selectErr != nil {
 			logrus.Error(selectErr)
-			runError = selectErr
+			lastErr = selectErr
 			break
 		}
 
@@ -147,9 +148,15 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		logrus.Debugf("%s: `%s` directs `%s`, selecting `%s`", runnerName, currentAction.Name(), direction, nextActionName)
 
 		input = output
+		if runErr != nil {
+			lastErr = runErr
+		}
+	}
+	if lastErr != nil && direction != Abort {
+		direction = Error
 	}
 
-	return output, direction, runError
+	return output, direction, lastErr
 }
 
 func (p *Pipeline[T]) selectNextAction(currentAction Action[T], direction string) (nextAction Action[T], err error) {

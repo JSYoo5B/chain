@@ -2,6 +2,7 @@ package dag
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -90,6 +91,88 @@ func TestMultiPipeline(t *testing.T) {
 	})
 }
 
+func TestErrorPropagation(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
+
+	t.Run("simple pipeline with single error", func(t *testing.T) {
+		action1 := NewCollatz("action1")
+		action2 := &ErrorMaker{message: "error2"}
+		action3 := NewCollatz("action3")
+		pipeline := NewPipeline("Pipeline", action1, action2, action3)
+		pipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
+		pipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		pipeline.SetRunPlan(action3, TerminationPlan[int]())
+
+		// 5 -> 16 -> 16(error2) -> 8
+		output, direction, err := pipeline.Run(context.Background(), 5)
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "error2")
+		assert.Equal(t, Error, direction)
+		assert.Equal(t, 8, output)
+	})
+
+	t.Run("simple pipeline with multiple errors", func(t *testing.T) {
+		action1 := NewCollatz("action1")
+		action2 := &ErrorMaker{message: "error2"}
+		action3 := &ErrorMaker{message: "error3"}
+		pipeline := NewPipeline("Pipeline", action1, action2, action3)
+		pipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
+		pipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		pipeline.SetRunPlan(action3, TerminationPlan[int]())
+
+		// 5 -> 16 -> 16(error2) -> 16(error3)
+		output, direction, err := pipeline.Run(context.Background(), 5)
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "error3")
+		assert.Equal(t, Error, direction)
+		assert.Equal(t, 16, output)
+	})
+
+	t.Run("simple pipeline with panic", func(t *testing.T) {
+		action1 := NewCollatz("action1")
+		action2 := &PanicMaker{message: "panic2"}
+		action3 := NewCollatz("action3")
+		pipeline := NewPipeline("Pipeline", action1, action2, action3)
+		pipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
+		pipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		pipeline.SetRunPlan(action3, TerminationPlan[int]())
+
+		// 5 -> 16 -> 16(panic2) -> abort
+		output, direction, err := pipeline.Run(context.Background(), 5)
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "panic2")
+		assert.Equal(t, Abort, direction)
+		assert.Equal(t, 16, output)
+	})
+
+	t.Run("multi pipeline with internal error", func(t *testing.T) {
+		action1 := NewCollatz("action1")
+		action2 := &ErrorMaker{message: "error2"}
+		action3 := NewCollatz("action3")
+		subPipeline := NewPipeline("SubPipeline", action1, action2, action3)
+		subPipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
+		subPipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		subPipeline.SetRunPlan(action3, TerminationPlan[int]())
+		action0 := NewCollatz("action0")
+		action4 := NewCollatz("action4")
+		pipeline := NewPipeline("Pipeline", action0, subPipeline, action4)
+		pipeline.SetRunPlan(action0, ActionPlan[int]{Success: subPipeline})
+		pipeline.SetRunPlan(subPipeline, ActionPlan[int]{Success: action4, Error: action4})
+		pipeline.SetRunPlan(action4, TerminationPlan[int]())
+
+		// 5 -> [16 -> 8 -> 8(error2) -> 4] -> 2
+		output, direction, err := pipeline.Run(context.Background(), 5)
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "error2")
+		assert.Equal(t, Error, direction)
+		assert.Equal(t, 2, output)
+	})
+}
+
 type Collatz struct {
 	*Pipeline[int]
 	CheckNext Action[int]
@@ -157,4 +240,18 @@ type OnOdd struct{}
 func (OnOdd) Name() string { return "OnOdd" }
 func (OnOdd) Run(_ context.Context, input int) (output int, direction string, err error) {
 	return 3*input + 1, Success, nil
+}
+
+type ErrorMaker struct{ message string }
+
+func (e ErrorMaker) Name() string { return e.message }
+func (e ErrorMaker) Run(_ context.Context, input int) (output int, direction string, err error) {
+	return input, Error, errors.New(e.message)
+}
+
+type PanicMaker struct{ message string }
+
+func (p PanicMaker) Name() string { return p.message }
+func (p PanicMaker) Run(_ context.Context, _ int) (output int, direction string, err error) {
+	panic(errors.New(p.message))
 }
