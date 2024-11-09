@@ -9,26 +9,33 @@ import (
 
 type Pipeline[T any] struct {
 	name       string
+	runPlans   map[Action[T]]ActionPlan[T]
 	initAction Action[T]
-	planMap    map[Action[T]]ActionPlan[T]
 }
 
-func NewPipeline[T any](name string, actions ...Action[T]) *Pipeline[T] {
+func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
+	if name == "" {
+		panic(errors.New("pipeline must have a name"))
+	}
+	if len(memberActions) == 0 {
+		panic(errors.New("no actions were described for creating pipeline"))
+	}
+
 	p := &Pipeline[T]{
-		name:    name,
-		planMap: map[Action[T]]ActionPlan[T]{},
+		name:       name,
+		runPlans:   map[Action[T]]ActionPlan[T]{},
+		initAction: memberActions[0],
 	}
 
-	if len(actions) == 0 {
-		panic("no actions were described for creating pipeline")
-	}
+	terminate := Terminate[T]()
+	for i, action := range memberActions {
+		if action == terminate {
+			panic(errors.New("do not set terminate as a member"))
+		}
 
-	p.initAction = actions[0]
-	terminate := TerminateAction[T]()
-	for i, action := range actions {
 		nextAction := terminate
-		if i+1 < len(actions) {
-			nextAction = actions[i+1]
+		if i+1 < len(memberActions) {
+			nextAction = memberActions[i+1]
 		}
 
 		defaultPlan := ActionPlan[T]{
@@ -37,21 +44,22 @@ func NewPipeline[T any](name string, actions ...Action[T]) *Pipeline[T] {
 			Abort:   terminate,
 		}
 
-		if _, exists := p.planMap[action]; exists {
-			panic(fmt.Sprintf("duplicate action specified on actions argument %d", i+1))
+		if _, exists := p.runPlans[action]; exists {
+			panic(fmt.Errorf("duplicate action specified on actions argument %d", i+1))
 		}
 
-		p.planMap[action] = defaultPlan
+		p.runPlans[action] = defaultPlan
 	}
 
 	return p
 }
 
-func (p *Pipeline[T]) Name() string { return p.name }
-
-func (p *Pipeline[T]) SetActionPlan(currentAction Action[T], plan ActionPlan[T]) {
-	if _, exists := p.planMap[currentAction]; !exists {
-		panic("given action is not registered on constructor")
+func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
+	if currentAction == nil {
+		panic(errors.New("cannot set plan for terminate"))
+	}
+	if _, exists := p.runPlans[currentAction]; !exists {
+		panic(fmt.Errorf("`%s` is not a member of this pipeline", currentAction.Name()))
 	}
 
 	// When given plan is nil, make currentAction to terminate on any cases
@@ -60,7 +68,7 @@ func (p *Pipeline[T]) SetActionPlan(currentAction Action[T], plan ActionPlan[T])
 	}
 
 	// Set next action to terminate when default directions were not planned
-	terminate := TerminateAction[T]()
+	terminate := Terminate[T]()
 	if _, exists := plan[Success]; !exists {
 		plan[Success] = terminate
 	}
@@ -71,8 +79,28 @@ func (p *Pipeline[T]) SetActionPlan(currentAction Action[T], plan ActionPlan[T])
 		plan[Abort] = terminate
 	}
 
-	p.planMap[currentAction] = plan
+	// Validate given plan with members
+	var panicMsg error
+	for direction, nextAction := range plan {
+		if nextAction == terminate {
+			continue
+		}
+
+		if !p.isMember(nextAction) {
+			panicMsg = fmt.Errorf("setting plan from `%s` directing `%s` to non-member `%s`", currentAction.Name(), direction, nextAction.Name())
+		} else if nextAction == currentAction {
+			panicMsg = fmt.Errorf("setting self loop plan with `%s` directing `%s`", currentAction.Name(), direction)
+		}
+
+		if panicMsg != nil {
+			panic(panicMsg)
+		}
+	}
+
+	p.runPlans[currentAction] = plan
 }
+
+func (p *Pipeline[T]) Name() string { return p.name }
 
 func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction string, err error) {
 	return p.RunAt(p.initAction, ctx, input)
@@ -81,7 +109,7 @@ func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction str
 const parentRunner = "PipelineParentRunner"
 
 func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, direction string, runError error) {
-	if _, exists := p.planMap[initAction]; !exists {
+	if _, exists := p.runPlans[initAction]; !exists {
 		return input, Error, errors.New("given initAction is not registered on constructor")
 	}
 
@@ -92,18 +120,19 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 	ctx = context.WithValue(ctx, parentRunner, runnerName)
 
 	var (
-		terminate     = TerminateAction[T]()
+		terminate     = Terminate[T]()
 		currentAction Action[T]
 		nextAction    Action[T]
 		selectErr     error
 	)
-	logrus.Debugf("%s: Start running with %s", runnerName, initAction.Name())
+	logrus.Debugf("%s: Start running with `%s`", runnerName, initAction.Name())
 	for currentAction = initAction; currentAction != nil; currentAction = nextAction {
 		output, direction, runError = runAction(currentAction, ctx, input)
 
 		nextAction, selectErr = p.selectNextAction(currentAction, direction)
 		if selectErr != nil {
-			logrus.Errorf("failed to select next Action: %s", selectErr.Error())
+			logrus.Error(selectErr)
+			runError = selectErr
 			break
 		}
 
@@ -111,7 +140,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		if nextAction != terminate {
 			nextActionName = nextAction.Name()
 		}
-		logrus.Debugf("%s: %s directs '%s', selecting %s", runnerName, currentAction.Name(), direction, nextActionName)
+		logrus.Debugf("%s: `%s` directs `%s`, selecting `%s`", runnerName, currentAction.Name(), direction, nextActionName)
 
 		input = output
 	}
@@ -120,14 +149,19 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 }
 
 func (p *Pipeline[T]) selectNextAction(currentAction Action[T], direction string) (nextAction Action[T], err error) {
-	terminate := TerminateAction[T]()
-	plan, exist := p.planMap[currentAction]
+	terminate := Terminate[T]()
+	plan, exist := p.runPlans[currentAction]
 	if !exist || plan == nil {
-		return terminate, fmt.Errorf("no action plan found for Action[%s]", currentAction.Name())
+		return terminate, fmt.Errorf("no action plan found for `%s`", currentAction.Name())
 	}
 	if nextAction, exist = plan[direction]; !exist {
-		return terminate, fmt.Errorf("no action plan from Action[%s] directing %s", currentAction.Name(), direction)
+		return terminate, fmt.Errorf("no action plan from `%s` directing `%s`", currentAction.Name(), direction)
 	}
 
 	return nextAction, nil
+}
+
+func (p *Pipeline[T]) isMember(action Action[T]) bool {
+	_, exists := p.runPlans[action]
+	return exists
 }

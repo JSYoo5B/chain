@@ -8,6 +8,6 @@ const (
 	Abort   = "abort"
 )
 
-func NoActionPlan[T any]() ActionPlan[T] {
+func TerminationPlan[T any]() ActionPlan[T] {
 	return nil
 }

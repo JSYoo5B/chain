@@ -12,7 +12,7 @@ type Action[T any] interface {
 	Run(ctx context.Context, input T) (output T, direction string, err error)
 }
 
-func TerminateAction[T any]() Action[T] {
+func Terminate[T any]() Action[T] {
 	return nil
 }
 
@@ -38,7 +38,7 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 
 	output, direction, runError = action.Run(ctx, input)
 	if runError != nil && direction != Error {
-		logrus.Errorf("%s: invoked error but directing '%s', overriding with Error", action.Name(), direction)
+		logrus.Errorf("%s: invoked error but directing `%s`, overriding with `error`", action.Name(), direction)
 		direction = Error
 	}
 	return output, direction, runError

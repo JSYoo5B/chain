@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestSinglePipeline(t *testing.T) {
+func TestSimplePipeline(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	collatz := NewCollatz("SingleCollatz")
@@ -106,17 +106,17 @@ func NewCollatz(name string) *Collatz {
 		onOdd,
 	)
 
-	terminate := TerminateAction[int]()
-	noActionPlan := NoActionPlan[int]()
-	pipeline.SetActionPlan(checkNext, ActionPlan[int]{
+	terminate := Terminate[int]()
+	noActionPlan := TerminationPlan[int]()
+	pipeline.SetRunPlan(checkNext, ActionPlan[int]{
 		"even": onEven,
 		"odd":  onOdd,
 	})
-	pipeline.SetActionPlan(onEven, ActionPlan[int]{
+	pipeline.SetRunPlan(onEven, ActionPlan[int]{
 		Success: terminate,
 		// Skip Error, automatically configured as terminate
 	})
-	pipeline.SetActionPlan(onOdd, noActionPlan)
+	pipeline.SetRunPlan(onOdd, noActionPlan)
 
 	return &Collatz{
 		Pipeline:  pipeline,
