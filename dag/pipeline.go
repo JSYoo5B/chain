@@ -103,6 +103,10 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 func (p *Pipeline[T]) Name() string { return p.name }
 
 func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction string, err error) {
+	if len(p.runPlans) == 1 {
+		return runAction(p.initAction, ctx, input)
+	}
+
 	return p.RunAt(p.initAction, ctx, input)
 }
 

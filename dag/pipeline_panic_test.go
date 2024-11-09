@@ -2,6 +2,7 @@ package dag
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -137,9 +138,85 @@ func TestPanicOnConfiguration(t *testing.T) {
 	}
 }
 
+func TestRecoverOnRun(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
+
+	ctx := context.Background()
+	type testCase struct {
+		closure func(t *testing.T) func()
+	}
+
+	testCases := map[string]testCase{
+		"recover from action": {
+			func(t *testing.T) func() {
+				return func() {
+					pipeline := NewPipeline("Calculation", &Divide{})
+					_, direction, err := pipeline.Run(ctx, 0)
+
+					assert.Error(t, err)
+					assert.Contains(t, err.Error(), "divide by zero")
+					assert.Equal(t, Abort, direction)
+				}
+			}},
+		"skip actions after recover": {
+			func(t *testing.T) func() {
+				return func() {
+					pipeline := NewPipeline("Calculation", &Divide{}, &SetTen{})
+					output, direction, err := pipeline.Run(ctx, 0)
+
+					assert.Error(t, err)
+					assert.Contains(t, err.Error(), "divide by zero")
+					assert.Equal(t, Abort, direction)
+					assert.NotEqual(t, 10, output)
+				}
+			}},
+		"internal pipeline panic recovers": {
+			func(t *testing.T) func() {
+				return func() {
+					subPipeline := NewPipeline("SubPipeline", &Divide{}, &SetTen{})
+					pipeline := NewPipeline(
+						"SuperPipeline",
+						&SetTen{name: "setTen"},
+						&Divide{name: "divide"},
+						subPipeline,
+						&SetTen{name: "runAfterPanic"},
+					)
+					output, direction, err := pipeline.Run(ctx, 0)
+
+					assert.Error(t, err)
+					assert.Contains(t, err.Error(), "divide by zero")
+					assert.Equal(t, Abort, direction)
+					assert.NotEqual(t, 10, output)
+				}
+			}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			code := tc.closure(t)
+			assert.NotPanics(t, code)
+		})
+	}
+}
+
 type Blank struct{ name string }
 
 func (b Blank) Name() string { return b.name }
 func (Blank) Run(_ context.Context, _ string) (string, string, error) {
 	return "", Abort, nil
+}
+
+type Divide struct{ name string }
+
+func (Divide) Name() string { return "Divide" }
+func (Divide) Run(_ context.Context, input int) (output int, direction string, err error) {
+	// panics when input is zero
+	return 1 / input, Success, nil
+}
+
+type SetTen struct{ name string }
+
+func (SetTen) Name() string { return "SetTen" }
+func (SetTen) Run(_ context.Context, _ int) (output int, direction string, err error) {
+	return 10, Success, nil
 }

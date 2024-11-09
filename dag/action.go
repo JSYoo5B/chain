@@ -37,7 +37,7 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 	}()
 
 	output, direction, runError = action.Run(ctx, input)
-	if runError != nil && direction != Error {
+	if runError != nil && direction != Error && direction != Abort {
 		logrus.Errorf("%s: invoked error but directing `%s`, overriding with `error`", action.Name(), direction)
 		direction = Error
 	}
