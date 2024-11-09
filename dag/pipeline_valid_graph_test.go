@@ -99,8 +99,8 @@ func TestErrorPropagation(t *testing.T) {
 		action2 := &ErrorMaker{message: "error2"}
 		action3 := NewCollatz("action3")
 		pipeline := NewPipeline("Pipeline", action1, action2, action3)
-		pipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
-		pipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		pipeline.SetRunPlan(action1, SuccessOnlyPlan(action2))
+		pipeline.SetRunPlan(action2, DefaultPlan(action3, action3))
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(error2) -> 8
@@ -117,8 +117,8 @@ func TestErrorPropagation(t *testing.T) {
 		action2 := &ErrorMaker{message: "error2"}
 		action3 := &ErrorMaker{message: "error3"}
 		pipeline := NewPipeline("Pipeline", action1, action2, action3)
-		pipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
-		pipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		pipeline.SetRunPlan(action1, SuccessOnlyPlan(action2))
+		pipeline.SetRunPlan(action2, DefaultPlan(action3, action3))
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(error2) -> 16(error3)
@@ -135,8 +135,8 @@ func TestErrorPropagation(t *testing.T) {
 		action2 := &PanicMaker{message: "panic2"}
 		action3 := NewCollatz("action3")
 		pipeline := NewPipeline("Pipeline", action1, action2, action3)
-		pipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
-		pipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		pipeline.SetRunPlan(action1, SuccessOnlyPlan(action2))
+		pipeline.SetRunPlan(action2, DefaultPlan(action3, action3))
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(panic2) -> abort
@@ -148,19 +148,37 @@ func TestErrorPropagation(t *testing.T) {
 		assert.Equal(t, 16, output)
 	})
 
+	t.Run("simple pipeline with panic and abort planning", func(t *testing.T) {
+		action1 := NewCollatz("action1")
+		action2 := &PanicMaker{message: "panic2"}
+		action3 := NewCollatz("action3")
+		pipeline := NewPipeline("Pipeline", action1, action2, action3)
+		pipeline.SetRunPlan(action1, SuccessOnlyPlan(action2))
+		pipeline.SetRunPlan(action2, DefaultPlanWithAbort(action3, action3, action3))
+		pipeline.SetRunPlan(action3, TerminationPlan[int]())
+
+		// 5 -> 16 -> 16(panic2) -(abort)-> 8
+		output, direction, err := pipeline.Run(context.Background(), 5)
+
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "panic2")
+		assert.Equal(t, Error, direction)
+		assert.Equal(t, 8, output)
+	})
+
 	t.Run("multi pipeline with internal error", func(t *testing.T) {
 		action1 := NewCollatz("action1")
 		action2 := &ErrorMaker{message: "error2"}
 		action3 := NewCollatz("action3")
 		subPipeline := NewPipeline("SubPipeline", action1, action2, action3)
-		subPipeline.SetRunPlan(action1, ActionPlan[int]{Success: action2})
-		subPipeline.SetRunPlan(action2, ActionPlan[int]{Success: action3, Error: action3})
+		subPipeline.SetRunPlan(action1, SuccessOnlyPlan(action2))
+		subPipeline.SetRunPlan(action2, DefaultPlan(action3, action3))
 		subPipeline.SetRunPlan(action3, TerminationPlan[int]())
 		action0 := NewCollatz("action0")
 		action4 := NewCollatz("action4")
 		pipeline := NewPipeline("Pipeline", action0, subPipeline, action4)
-		pipeline.SetRunPlan(action0, ActionPlan[int]{Success: subPipeline})
-		pipeline.SetRunPlan(subPipeline, ActionPlan[int]{Success: action4, Error: action4})
+		pipeline.SetRunPlan(action0, SuccessOnlyPlan(subPipeline))
+		pipeline.SetRunPlan(subPipeline, DefaultPlan(action4, action4))
 		pipeline.SetRunPlan(action4, TerminationPlan[int]())
 
 		// 5 -> [16 -> 8 -> 8(error2) -> 4] -> 2

@@ -64,9 +64,7 @@ func TestPanicOnConfiguration(t *testing.T) {
 				action1, nonMember := &Blank{"member"}, &Blank{"non-member"}
 				pipeline := NewPipeline("Pipeline", action1)
 
-				pipeline.SetRunPlan(nonMember, ActionPlan[string]{
-					Success: action1,
-				})
+				pipeline.SetRunPlan(nonMember, SuccessOnlyPlan(action1))
 			},
 			panics:  true,
 			message: "`non-member` is not a member of this pipeline",
@@ -76,9 +74,7 @@ func TestPanicOnConfiguration(t *testing.T) {
 				action1, nonMember := &Blank{"member"}, &Blank{"non-member"}
 				pipeline := NewPipeline("Pipeline", action1)
 
-				pipeline.SetRunPlan(action1, ActionPlan[string]{
-					Success: nonMember,
-				})
+				pipeline.SetRunPlan(action1, SuccessOnlyPlan(nonMember))
 			},
 			panics:  true,
 			message: "setting plan from `member` directing `success` to non-member `non-member`",
@@ -88,9 +84,7 @@ func TestPanicOnConfiguration(t *testing.T) {
 				action1 := &Blank{"member"}
 				pipeline := NewPipeline("Pipeline", action1)
 
-				pipeline.SetRunPlan(action1, ActionPlan[string]{
-					Success: action1,
-				})
+				pipeline.SetRunPlan(action1, SuccessOnlyPlan(action1))
 			},
 			panics:  true,
 			message: "setting self loop plan with `member` directing `success`",

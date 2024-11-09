@@ -32,23 +32,15 @@ func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
 		if action == terminate {
 			panic(errors.New("do not set terminate as a member"))
 		}
+		if _, exists := p.runPlans[action]; exists {
+			panic(fmt.Errorf("duplicate action specified on actions argument %d", i+1))
+		}
 
 		nextAction := terminate
 		if i+1 < len(memberActions) {
 			nextAction = memberActions[i+1]
 		}
-
-		defaultPlan := ActionPlan[T]{
-			Success: nextAction,
-			Error:   terminate,
-			Abort:   terminate,
-		}
-
-		if _, exists := p.runPlans[action]; exists {
-			panic(fmt.Errorf("duplicate action specified on actions argument %d", i+1))
-		}
-
-		p.runPlans[action] = defaultPlan
+		p.runPlans[action] = SuccessOnlyPlan(nextAction)
 	}
 
 	return p
