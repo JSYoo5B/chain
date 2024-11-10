@@ -1,4 +1,4 @@
-package dag
+package v1
 
 type ActionPlan[T any] map[string]Action[T]
 
