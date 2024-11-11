@@ -46,7 +46,15 @@ func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
 		if i+1 < len(memberActions) {
 			nextAction = memberActions[i+1]
 		}
-		p.runPlans[action] = SuccessOnlyPlan(nextAction)
+
+		defaultPlan := ActionPlan[T]{}
+		for _, direction := range append(action.Directions(), Error, Abort) {
+			if _, exists := defaultPlan[direction]; !exists {
+				defaultPlan[direction] = terminate
+			}
+		}
+		defaultPlan[Success] = nextAction
+		p.runPlans[action] = defaultPlan
 	}
 
 	return p
@@ -73,8 +81,7 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 
 	// Set next action to terminate when allowed directions were not specified in plan
 	terminate := Terminate[T]()
-	availableDirections := append(currentAction.Directions(), Success, Error, Abort)
-	for _, direction := range availableDirections {
+	for _, direction := range append(currentAction.Directions(), Success, Error, Abort) {
 		if _, exists := plan[direction]; !exists {
 			plan[direction] = terminate
 		}
