@@ -24,6 +24,8 @@ type Action[T any] interface {
 	Run(ctx context.Context, input T) (output T, direction string, err error)
 }
 
+// Terminate returns a termination action,
+// providing a clear indication of termination rather than returning nil.
 func Terminate[T any]() Action[T] {
 	return nil
 }
