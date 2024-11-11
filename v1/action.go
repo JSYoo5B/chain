@@ -9,6 +9,7 @@ import (
 
 type Action[T any] interface {
 	Name() string
+	Directions() []string
 	Run(ctx context.Context, input T) (output T, direction string, err error)
 }
 

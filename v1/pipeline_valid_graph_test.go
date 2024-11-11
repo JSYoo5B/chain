@@ -229,7 +229,8 @@ func NewCollatz(name string) *Collatz {
 
 type CheckNext struct{}
 
-func (CheckNext) Name() string { return "CheckNext" }
+func (CheckNext) Name() string         { return "CheckNext" }
+func (CheckNext) Directions() []string { return []string{"even", "odd"} }
 func (CheckNext) Run(_ context.Context, input int) (output int, direction string, err error) {
 	if input == 1 {
 		return input, Abort, nil
@@ -244,7 +245,8 @@ func (CheckNext) Run(_ context.Context, input int) (output int, direction string
 
 type OnEven struct{}
 
-func (OnEven) Name() string { return "OnEven" }
+func (OnEven) Name() string         { return "OnEven" }
+func (OnEven) Directions() []string { return []string{Success, Error, Abort} }
 func (OnEven) Run(_ context.Context, input int) (output int, direction string, err error) {
 	if input%2 != 0 {
 		// direction is intended bug. on running pipeline, it should be changed as Error
@@ -255,21 +257,24 @@ func (OnEven) Run(_ context.Context, input int) (output int, direction string, e
 
 type OnOdd struct{}
 
-func (OnOdd) Name() string { return "OnOdd" }
+func (OnOdd) Name() string         { return "OnOdd" }
+func (OnOdd) Directions() []string { return []string{Success, Error, Abort} }
 func (OnOdd) Run(_ context.Context, input int) (output int, direction string, err error) {
 	return 3*input + 1, Success, nil
 }
 
 type ErrorMaker struct{ message string }
 
-func (e ErrorMaker) Name() string { return e.message }
+func (e ErrorMaker) Name() string       { return e.message }
+func (ErrorMaker) Directions() []string { return []string{Success, Error, Abort} }
 func (e ErrorMaker) Run(_ context.Context, input int) (output int, direction string, err error) {
 	return input, Error, errors.New(e.message)
 }
 
 type PanicMaker struct{ message string }
 
-func (p PanicMaker) Name() string { return p.message }
+func (p PanicMaker) Name() string       { return p.message }
+func (PanicMaker) Directions() []string { return []string{Success, Error, Abort} }
 func (p PanicMaker) Run(_ context.Context, _ int) (output int, direction string, err error) {
 	panic(errors.New(p.message))
 }

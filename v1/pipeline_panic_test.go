@@ -195,14 +195,16 @@ func TestRecoverOnRun(t *testing.T) {
 
 type Blank struct{ name string }
 
-func (b Blank) Name() string { return b.name }
+func (b Blank) Name() string       { return b.name }
+func (Blank) Directions() []string { return []string{Success, Error, Abort} }
 func (Blank) Run(_ context.Context, _ string) (string, string, error) {
 	return "", Abort, nil
 }
 
 type Divide struct{ name string }
 
-func (Divide) Name() string { return "Divide" }
+func (Divide) Name() string         { return "Divide" }
+func (Divide) Directions() []string { return []string{Success, Error, Abort} }
 func (Divide) Run(_ context.Context, input int) (output int, direction string, err error) {
 	// panics when input is zero
 	return 1 / input, Success, nil
@@ -210,7 +212,8 @@ func (Divide) Run(_ context.Context, input int) (output int, direction string, e
 
 type SetTen struct{ name string }
 
-func (SetTen) Name() string { return "SetTen" }
+func (SetTen) Name() string         { return "SetTen" }
+func (SetTen) Directions() []string { return []string{Success, Error, Abort} }
 func (SetTen) Run(_ context.Context, _ int) (output int, direction string, err error) {
 	return 10, Success, nil
 }

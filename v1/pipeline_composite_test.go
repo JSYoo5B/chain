@@ -65,6 +65,7 @@ type NumAction struct {
 
 func NewNumAction(action Action[int]) *NumAction { return &NumAction{action: action} }
 func (n NumAction) Name() string                 { return n.action.Name() }
+func (n NumAction) Directions() []string         { return n.action.Directions() }
 func (n NumAction) Run(ctx context.Context, input TestType) (TestType, string, error) {
 	output := input
 
@@ -81,6 +82,7 @@ type MsgAction struct {
 
 func NewMsgAction(action Action[string]) *MsgAction { return &MsgAction{action: action} }
 func (m MsgAction) Name() string                    { return m.action.Name() }
+func (m MsgAction) Directions() []string            { return m.action.Directions() }
 func (m MsgAction) Run(ctx context.Context, input TestType) (TestType, string, error) {
 	output := input
 
@@ -93,14 +95,16 @@ func (m MsgAction) Run(ctx context.Context, input TestType) (TestType, string, e
 
 type IncAction struct{ name string }
 
-func (i IncAction) Name() string { return i.name }
+func (i IncAction) Name() string       { return i.name }
+func (IncAction) Directions() []string { return []string{Success, Error, Abort} }
 func (IncAction) Run(_ context.Context, input int) (output int, direction string, err error) {
 	return input + 1, Success, nil
 }
 
 type GreetAction struct{ name string }
 
-func (g GreetAction) Name() string { return g.name }
+func (g GreetAction) Name() string       { return g.name }
+func (GreetAction) Directions() []string { return []string{Success, Error, Abort} }
 func (GreetAction) Run(_ context.Context, input string) (output string, direction string, err error) {
 	return input + "o", Success, nil
 }
