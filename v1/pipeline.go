@@ -132,6 +132,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		nextAction, selectErr = p.selectNextAction(currentAction, direction)
 		if selectErr != nil {
 			logrus.Error(selectErr)
+			direction = Abort
 			lastErr = selectErr
 			break
 		}
