@@ -59,16 +59,13 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 		plan = ActionPlan[T]{}
 	}
 
-	// Set next action to terminate when default directions were not planned
+	// Set next action to terminate when allowed directions were not specified in plan
 	terminate := Terminate[T]()
-	if _, exists := plan[Success]; !exists {
-		plan[Success] = terminate
-	}
-	if _, exists := plan[Error]; !exists {
-		plan[Error] = terminate
-	}
-	if _, exists := plan[Abort]; !exists {
-		plan[Abort] = terminate
+	availableDirections := append(currentAction.Directions(), Success, Error, Abort)
+	for _, direction := range availableDirections {
+		if _, exists := plan[direction]; !exists {
+			plan[direction] = terminate
+		}
 	}
 
 	// Validate given plan with members
@@ -78,6 +75,12 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 			continue
 		}
 
+		// If the direction is not in currentAction's valid directions, panic
+		if !contains(currentAction.Directions(), direction) {
+			panicMsg = fmt.Errorf("`%s` does not support direction `%s`", currentAction.Name(), direction)
+		}
+
+		// Check the nextAction is valid. (check non-member, or self loop)
 		if !p.isMember(nextAction) {
 			panicMsg = fmt.Errorf("setting plan from `%s` directing `%s` to non-member `%s`", currentAction.Name(), direction, nextAction.Name())
 		} else if nextAction == currentAction {
@@ -162,6 +165,15 @@ func (p *Pipeline[T]) selectNextAction(currentAction Action[T], direction string
 	}
 
 	return nextAction, nil
+}
+
+func contains(directions []string, direction string) bool {
+	for _, dir := range directions {
+		if dir == direction {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Pipeline[T]) isMember(action Action[T]) bool {
