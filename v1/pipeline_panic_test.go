@@ -59,6 +59,18 @@ func TestPanicOnConfiguration(t *testing.T) {
 			panics:  true,
 			message: "cannot set plan for terminate",
 		},
+		"set action plan for unsupported direction": {
+			code: func() {
+				action1, action2 := &Blank{"action1"}, &Blank{"action2"}
+				pipeline := NewPipeline("Pipeline", action1, action2)
+
+				pipeline.SetRunPlan(action1, ActionPlan[string]{
+					"unsupported": action2,
+				})
+			},
+			panics:  true,
+			message: "`action1` does not support direction `unsupported`",
+		},
 		"set action plan for non-member": {
 			code: func() {
 				action1, nonMember := &Blank{"member"}, &Blank{"non-member"}
