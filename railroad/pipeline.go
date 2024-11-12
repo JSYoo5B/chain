@@ -100,7 +100,7 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 		}
 
 		// Check the nextAction is valid. (check non-member, or self loop)
-		if !p.isMember(nextAction) {
+		if !isMemberActionInPipeline(nextAction, p) {
 			panicMsg = fmt.Errorf("setting plan from `%s` directing `%s` to non-member `%s`", currentAction.Name(), direction, nextAction.Name())
 		} else if nextAction == currentAction {
 			panicMsg = fmt.Errorf("setting self loop plan with `%s` directing `%s`", currentAction.Name(), direction)
@@ -161,7 +161,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 	for currentAction = initAction; currentAction != nil; currentAction = nextAction {
 		output, direction, runErr = runAction(currentAction, ctx, input)
 
-		nextAction, selectErr = p.selectNextAction(currentAction, direction)
+		nextAction, selectErr = selectNextAction(p.runPlans[currentAction], currentAction, direction)
 		if selectErr != nil {
 			logrus.Error(selectErr)
 			direction = Abort
@@ -189,10 +189,12 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 
 const parentRunner = "PipelineParentRunner"
 
-func (p *Pipeline[T]) selectNextAction(currentAction Action[T], direction string) (nextAction Action[T], err error) {
-	terminate := Terminate[T]()
-	plan, exist := p.runPlans[currentAction]
-	if !exist || plan == nil {
+func selectNextAction[T any](plan ActionPlan[T], currentAction Action[T], direction string) (nextAction Action[T], err error) {
+	var (
+		terminate = Terminate[T]()
+		exist     bool
+	)
+	if plan == nil {
 		return terminate, fmt.Errorf("no action plan found for `%s`", currentAction.Name())
 	}
 	if nextAction, exist = plan[direction]; !exist {
@@ -211,7 +213,7 @@ func contains(directions []string, direction string) bool {
 	return false
 }
 
-func (p *Pipeline[T]) isMember(action Action[T]) bool {
+func isMemberActionInPipeline[T any](action Action[T], p *Pipeline[T]) bool {
 	_, exists := p.runPlans[action]
 	return exists
 }

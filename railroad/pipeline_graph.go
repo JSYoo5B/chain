@@ -9,7 +9,7 @@ import "fmt"
 func (p *Pipeline[T]) ValidateGraph() error {
 	// Step 1: Perform DFS from initAction to check for cycles and track visited nodes
 	visited := make(map[Action[T]]int)
-	if err := p.dfsWithCycleCheck(p.initAction, visited, []string{}); err != nil {
+	if err := dfsWithCycleCheck(p.initAction, p.runPlans, visited, []string{}); err != nil {
 		return err
 	}
 
@@ -25,7 +25,7 @@ func (p *Pipeline[T]) ValidateGraph() error {
 	for len(unvisited) > 0 {
 		newStart := unvisited[0] // Pick any unvisited node
 		visitedFromNewStart := make(map[Action[T]]int)
-		if err := p.dfsWithCycleCheck(newStart, visitedFromNewStart, []string{}); err != nil {
+		if err := dfsWithCycleCheck(newStart, p.runPlans, visitedFromNewStart, []string{}); err != nil {
 			return err
 		}
 
@@ -63,7 +63,7 @@ func (p *Pipeline[T]) ValidateGraph() error {
 	return nil
 }
 
-func (p *Pipeline[T]) dfsWithCycleCheck(node Action[T], visited map[Action[T]]int, path []string) error {
+func dfsWithCycleCheck[T any](node Action[T], graph map[Action[T]]ActionPlan[T], visited map[Action[T]]int, path []string) error {
 	path = append(path, "`"+node.Name()+"`")
 
 	if visited[node] != notVisited {
@@ -73,11 +73,11 @@ func (p *Pipeline[T]) dfsWithCycleCheck(node Action[T], visited map[Action[T]]in
 	visited[node] = visiting
 
 	terminate := Terminate[T]()
-	for direction, nextAction := range p.runPlans[node] {
+	for direction, nextAction := range graph[node] {
 		if nextAction != terminate {
 			edge := "-" + direction + "->"
 			path = append(path, edge)
-			if err := p.dfsWithCycleCheck(nextAction, visited, path); err != nil {
+			if err := dfsWithCycleCheck(nextAction, graph, visited, path); err != nil {
 				return err
 			}
 			path = path[:len(path)-1]
