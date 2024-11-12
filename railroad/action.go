@@ -13,7 +13,7 @@ type Action[T any] interface {
 	Name() string
 	// Directions returns a slice of strings representing the possible directions for the action to take.
 	// These directions (e.g., Success, Error, Abort) define how the action can proceed
-	// based on the outcome of its execution and guide the flow in the pipeline.
+	// based on the outcome of its execution and guide the flow in the Pipeline.
 	// Additional custom directions can also be provided, which can be used to implement custom branching logic
 	// and control the flow of execution in the Pipeline beyond the default flow.
 	Directions() []string

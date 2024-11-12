@@ -140,7 +140,7 @@ func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction str
 // The Abort direction, when encountered, will immediately halt the pipeline execution unless the plan specifies otherwise.
 // If no action plan is found for a given direction, the pipeline will terminate with the appropriate error.
 func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, direction string, lastErr error) {
-	if _, exists := p.runPlans[initAction]; !exists {
+	if !isMemberActionInPipeline(initAction, p) {
 		return input, Error, errors.New("given initAction is not registered on constructor")
 	}
 
