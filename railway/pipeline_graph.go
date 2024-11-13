@@ -1,4 +1,4 @@
-package railroad
+package railway
 
 import "fmt"
 

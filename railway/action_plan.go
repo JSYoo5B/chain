@@ -1,4 +1,4 @@
-package railroad
+package railway
 
 // ActionPlan represents a map that associates a direction (Success, Error, Abort, and other custom branching directions)
 // with the next Action to execute. It is used to define the flow of actions in a pipeline based on the direction of execution.
