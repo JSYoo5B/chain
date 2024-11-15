@@ -1,16 +1,21 @@
 package railway
 
-// ActionPlan represents a map that associates a direction (Success, Error, Abort, and other custom branching directions)
-// with the next Action to execute. It is used to define the flow of actions in a pipeline based on the direction of execution.
+// ActionPlan represents a map that associates a direction
+// (Success, Error, Abort, and other custom branching directions) with the next Action to execute.
+// It is used to define the flow of actions in a pipeline based on the direction of execution.
 type ActionPlan[T any] map[string]Action[T]
 
 const (
-	// Success represents the direction indicating that the action completed successfully and the pipeline should continue.
+	// Success represents the direction indicating that the action completed successfully
+	// and the pipeline should continue.
 	Success = "success"
-	// Error represents the direction indicating that an error occurred, and the pipeline should handle it accordingly.
+	// Error represents the direction indicating that an error occurred,
+	// and the pipeline should handle it accordingly.
 	Error = "error"
-	// Abort represents the direction indicating that the pipeline execution should be aborted immediately.
-	// This can occur due to a specific Abort condition or in cases of unexpected errors or panics that cause the pipeline to halt.
+	// Abort represents the direction indicating that
+	// the pipeline execution should be aborted immediately.
+	// This can occur due to a specific Abort condition or
+	// in cases of unexpected errors or panics that cause the pipeline to halt.
 	Abort = "abort"
 )
 
@@ -30,7 +35,8 @@ func SuccessOnlyPlan[T any](success Action[T]) ActionPlan[T] {
 	}
 }
 
-// DefaultPlan returns a standard ActionPlan with valid next actions for Success and Error, and Termination for Abort.
+// DefaultPlan returns a standard ActionPlan with valid next actions for Success and Error,
+// and Termination for Abort.
 func DefaultPlan[T any](success, error Action[T]) ActionPlan[T] {
 	return ActionPlan[T]{
 		Success: success,

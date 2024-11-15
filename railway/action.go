@@ -8,19 +8,25 @@ import (
 )
 
 type Action[T any] interface {
-	// Name returns the name of the action. This is typically a unique identifier for the action
-	// that can be used to distinguish it from other actions in the pipeline.
+	// Name returns the name of the action.
+	// This is typically a unique identifier for the action that can be
+	// used to distinguish it from other actions in the pipeline.
 	Name() string
-	// Directions returns a slice of strings representing the possible directions for the action to take.
-	// These directions (e.g., Success, Error, Abort) define how the action can proceed
-	// based on the outcome of its execution and guide the flow in the Pipeline.
-	// Additional custom directions can also be provided, which can be used to implement custom branching logic
-	// and control the flow of execution in the Pipeline beyond the default flow.
+	// Directions returns a slice of strings representing
+	// the possible directions for the action to take.
+	// These directions (e.g., Success, Error, Abort) define how the action can
+	// proceed based on the outcome of its execution and guide the flow in the Pipeline.
+	// Additional custom directions can also be provided, which can be used to
+	// implement custom branching logic and control the flow of execution in the
+	// Pipeline beyond the default flow.
 	Directions() []string
-	// Run executes the action with the given context and input, and returns three values:
+	// Run executes the action with the given context and input, and returns
+	// three values:
 	// - output: The result of the Action's execution.
-	// - direction: A string indicating the flow direction after the action completes (e.g., Success, Error, Abort).
-	// - err: An error indicating if something went wrong during the execution. If there's no error, it will be nil.
+	// - direction: A string indicating the flow direction after the action
+	// 				completes (e.g., Success, Error, Abort and other custom branching directions).
+	// - err: An error indicating if something went wrong during the execution.
+	// 		  If there's no error, it will be nil.
 	Run(ctx context.Context, input T) (output T, direction string, err error)
 }
 

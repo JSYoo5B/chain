@@ -3,9 +3,7 @@ package railway
 import "fmt"
 
 // ValidateGraph ensures the pipeline's graph is connected and acyclic.
-// It checks for cycles first, then verifies that all nodes are reachable starting from the initAction.
-// If any node is unreachable, it starts a new traversal from the disconnected node and checks the union of visited nodes.
-// If the union of all visited nodes equals the total number of nodes, the graph is connected and the check finishes.
+// It checks for cycles first, then verifies that all nodes connected as a single graph.
 func (p *Pipeline[T]) ValidateGraph() error {
 	// Step 1: Perform DFS from initAction to check for cycles and track visited nodes
 	visited := make(map[Action[T]]int)

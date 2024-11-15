@@ -14,11 +14,13 @@ type Pipeline[T any] struct {
 }
 
 // NewPipeline initializes a new Pipeline with the provided name and actions.
-// It sets up the default ActionPlan for each Action in the pipeline, linking each action to the next in sequence.
+// It sets up the default ActionPlan for each Action in the pipeline, linking
+// each action to the next in sequence.
 // If no next action is specified, it links to the terminate action by default.
-// It ensures that no duplicate actions or the terminate action itself are included in the pipeline,
-// throwing a panic if either is detected.
-// This method establishes the sequential flow of actions by setting the next action for each action in the plan.
+// It ensures that no duplicate actions or the terminate action itself are
+// included in the pipeline, throwing a panic if either is detected.
+// This method establishes the sequential flow of actions by setting
+// the next action for each action in the plan.
 func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
 	if name == "" {
 		panic(errors.New("pipeline must have a name"))
@@ -64,7 +66,8 @@ func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
 // (Success, Error, Abort and other custom branching directions) to a subsequent action.
 // It ensures that only valid directions supported by the currentAction are used.
 // Any direction that the current action does not support leads to a panic.
-// Additionally, if the next action is not part of the pipeline, or if there's a self-loop, a panic will occur.
+// Additionally, if the next action is not part of the pipeline, or if there's
+// a self-loop, a panic will occur.
 // If no direction is planned, it defaults to terminating with the `terminate` action.
 func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 	if currentAction == nil {
@@ -118,9 +121,10 @@ func (p *Pipeline[T]) Name() string { return p.name }
 // Other custom directions are not allowed for a Pipeline, as it doesn't support branching behavior.
 func (p *Pipeline[T]) Directions() []string { return []string{Success, Error, Abort} }
 
-// Run executes its member Action within the Pipeline sequentially from the initAction to termination,
-// following the specified ActionPlan. The initAction refers to the first Action in
-// the memberActions provided as an argument to NewPipeline.
+// Run executes its member Action within the Pipeline sequentially
+// from the initAction to termination, following the specified ActionPlan.
+// The initAction refers to the first Action
+// in the memberActions provided as an argument to NewPipeline.
 func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction string, err error) {
 	if len(p.runPlans) == 1 {
 		return runAction(p.initAction, ctx, input)
@@ -131,10 +135,12 @@ func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction str
 
 // RunAt starts the execution of the pipeline from a given Action (initAction).
 // It follows the action plan, executing actions sequentially based on the specified directions.
-// If an action returns an error, the pipeline will proceed to the next action according to the defined plan,
-// potentially directing the flow to an action mapped for the Error direction.
-// The Abort direction, when encountered, will immediately halt the pipeline execution unless the plan specifies otherwise.
-// If no action plan is found for a given direction, the pipeline will terminate with the appropriate error.
+// If an action returns an error, the pipeline will proceed to the next action according to
+// the defined plan, potentially directing the flow to an action mapped for the Error direction.
+// The Abort direction, when encountered, will immediately halt the pipeline execution unless
+// the plan specifies otherwise.
+// If no action plan is found for a given direction,
+// the pipeline will terminate with the appropriate error.
 func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, direction string, lastErr error) {
 	if !isMemberActionInPipeline(initAction, p) {
 		return input, Error, errors.New("given initAction is not registered on constructor")
