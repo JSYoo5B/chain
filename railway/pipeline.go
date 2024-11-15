@@ -69,8 +69,7 @@ func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
 func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 	if currentAction == nil {
 		panic(errors.New("cannot set plan for terminate"))
-	}
-	if _, exists := p.runPlans[currentAction]; !exists {
+	} else if !isMemberActionInPipeline(currentAction, p) {
 		panic(fmt.Errorf("`%s` is not a member of this pipeline", currentAction.Name()))
 	}
 
@@ -88,7 +87,7 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 	}
 
 	// Validate given plan with members
-	var panicMsg error
+	var err error
 	for direction, nextAction := range plan {
 		if nextAction == terminate {
 			continue
@@ -96,18 +95,15 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 
 		// If the direction is not in currentAction's valid directions, panic
 		if !contains(currentAction.Directions(), direction) {
-			panicMsg = fmt.Errorf("`%s` does not support direction `%s`", currentAction.Name(), direction)
-		}
-
-		// Check the nextAction is valid. (check non-member, or self loop)
-		if !isMemberActionInPipeline(nextAction, p) {
-			panicMsg = fmt.Errorf("setting plan from `%s` directing `%s` to non-member `%s`", currentAction.Name(), direction, nextAction.Name())
+			err = fmt.Errorf("`%s` does not support direction `%s`", currentAction.Name(), direction)
+		} else if !isMemberActionInPipeline(nextAction, p) {
+			err = fmt.Errorf("setting plan from `%s` directing `%s` to non-member `%s`", currentAction.Name(), direction, nextAction.Name())
 		} else if nextAction == currentAction {
-			panicMsg = fmt.Errorf("setting self loop plan with `%s` directing `%s`", currentAction.Name(), direction)
+			err = fmt.Errorf("setting self loop plan with `%s` directing `%s`", currentAction.Name(), direction)
 		}
 
-		if panicMsg != nil {
-			panic(panicMsg)
+		if err != nil {
+			panic(err)
 		}
 	}
 
