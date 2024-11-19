@@ -7,26 +7,26 @@ import (
 	"runtime/debug"
 )
 
+// RunFunc represents the signature for the function that defines the execution logic in the railway.
+// For more details, refer to the Action.Run method.
+type RunFunc[T any] func(ctx context.Context, input T) (output T, direction string, err error)
+
 type Action[T any] interface {
 	// Name returns the name of the action.
 	// This is typically a unique identifier for the action that can be
 	// used to distinguish it from other actions in the pipeline.
 	Name() string
-	// Directions returns a slice of strings representing
-	// the possible directions for the action to take.
+	// Directions returns the possible directions for the action to take as a slice of strings.
 	// These directions (e.g., Success, Error, Abort) define how the action can
 	// proceed based on the outcome of its execution and guide the flow in the Pipeline.
-	// Additional custom directions can also be provided, which can be used to
-	// implement custom branching logic and control the flow of execution in the
-	// Pipeline beyond the default flow.
+	// Additional custom directions can also be provided, which can be used to implement custom
+	// branching logic and control the flow of execution in the Pipeline beyond the default flow.
+	// Default directions (Success, Error, Abort) can be omitted.
 	Directions() []string
-	// Run executes the action with the given context and input, and returns
-	// three values:
+	// Run executes the action with the given context and input, and returns three values:
 	// - output: The result of the Action's execution.
-	// - direction: A string indicating the flow direction after the action
-	// 				completes (e.g., Success, Error, Abort and other custom branching directions).
-	// - err: An error indicating if something went wrong during the execution.
-	// 		  If there's no error, it will be nil.
+	// - direction: A string indicating the flow direction after the action completes.
+	// - err: An error indicating whether the action failed during execution.
 	Run(ctx context.Context, input T) (output T, direction string, err error)
 }
 
