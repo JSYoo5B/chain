@@ -1,4 +1,4 @@
-module github.com/JSYoo5B/railway
+module github.com/JSYoo5B/chain
 
 go 1.22
 

@@ -1,4 +1,4 @@
-package railway
+package chain
 
 // ActionPlan represents a map that associates a direction
 // (Success, Error, Abort, and other custom branching directions) with the next Action to execute.

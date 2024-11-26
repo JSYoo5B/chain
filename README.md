@@ -26,5 +26,5 @@ Railway is a Go package designed for building and managing **directed acyclic gr
 Install the package using:
 
 ```bash
-go get github.com/JSYoo5B/railway
+go get github.com/JSYoo5B/chain
 ```

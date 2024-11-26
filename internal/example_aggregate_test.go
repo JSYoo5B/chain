@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"github.com/JSYoo5B/railway"
+	"github.com/JSYoo5B/chain"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -11,18 +11,18 @@ import (
 // The following functions create two types of actions, Action[int] and Action[string],
 // where the generic types are different, making it impossible to handle them within a single pipeline.
 
-func newIncAction(name string) railway.Action[int] {
+func newIncAction(name string) chain.Action[int] {
 	runFunc := func(_ context.Context, input int) (output int, err error) {
 		return input + 1, nil
 	}
-	return railway.NewSimpleAction(name, runFunc)
+	return chain.NewSimpleAction(name, runFunc)
 }
 
-func newAppendAction(name string) railway.Action[string] {
+func newAppendAction(name string) chain.Action[string] {
 	runFunc := func(_ context.Context, input string) (output string, err error) {
 		return input + "o", nil
 	}
-	return railway.NewSimpleAction(name, runFunc)
+	return chain.NewSimpleAction(name, runFunc)
 }
 
 // By aggregating int and string into a single `Wrap` struct,
@@ -34,22 +34,22 @@ type Wrap struct {
 	message string
 }
 
-func newNumberAction(action railway.Action[int]) railway.Action[Wrap] {
+func newNumberAction(action chain.Action[int]) chain.Action[Wrap] {
 	getter := func(c Wrap) int { return c.number }
 	setter := func(c Wrap, i int) Wrap {
 		c.number = i
 		return c
 	}
-	return railway.NewAggregateAction(action, getter, setter)
+	return chain.NewAggregateAction(action, getter, setter)
 }
 
-func newMessageAction(action railway.Action[string]) railway.Action[Wrap] {
+func newMessageAction(action chain.Action[string]) chain.Action[Wrap] {
 	getter := func(c Wrap) string { return c.message }
 	setter := func(c Wrap, s string) Wrap {
 		c.message = s
 		return c
 	}
-	return railway.NewAggregateAction(action, getter, setter)
+	return chain.NewAggregateAction(action, getter, setter)
 }
 
 // This test demonstrates how different types of actions can be handled within a single pipeline.
@@ -59,7 +59,7 @@ func TestAggregatePipeline(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	t.Run("simple aggregate pipeline", func(t *testing.T) {
-		aggregatePipeline := railway.NewPipeline(
+		aggregatePipeline := chain.NewPipeline(
 			"ActionAggregateTest",
 			newNumberAction(newIncAction("action1")),
 			newMessageAction(newAppendAction("action2")),
@@ -78,17 +78,17 @@ func TestAggregatePipeline(t *testing.T) {
 	})
 
 	t.Run("nested pipeline aggregate pipeline", func(t *testing.T) {
-		inc2Action := railway.NewPipeline(
+		inc2Action := chain.NewPipeline(
 			"Inc2Action",
 			newIncAction("inc1"),
 			newIncAction("inc2"),
 		)
-		append2Action := railway.NewPipeline(
+		append2Action := chain.NewPipeline(
 			"Append2Action",
 			newAppendAction("append1"),
 			newAppendAction("append2"),
 		)
-		inc5Action := railway.NewPipeline(
+		inc5Action := chain.NewPipeline(
 			"Inc5Action",
 			newIncAction("inc3"),
 			newIncAction("inc4"),
@@ -97,7 +97,7 @@ func TestAggregatePipeline(t *testing.T) {
 			newIncAction("inc7"),
 		)
 
-		aggregatePipeline := railway.NewPipeline(
+		aggregatePipeline := chain.NewPipeline(
 			"PipelineAggregateTest",
 			newNumberAction(inc2Action),
 			newMessageAction(append2Action),

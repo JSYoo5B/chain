@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"github.com/JSYoo5B/railway"
+	"github.com/JSYoo5B/chain"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -50,37 +50,37 @@ func TestBranchingPipeline(t *testing.T) {
 	})
 }
 
-func basicCollatzFunction() *railway.Pipeline[int] {
+func basicCollatzFunction() *chain.Pipeline[int] {
 	branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
-	pipeline := railway.NewPipeline("SimpleCollatz", branch, even, odd1, odd2)
-	pipeline.SetRunPlan(branch, railway.ActionPlan[int]{
+	pipeline := chain.NewPipeline("SimpleCollatz", branch, even, odd1, odd2)
+	pipeline.SetRunPlan(branch, chain.ActionPlan[int]{
 		"even": even,
 		"odd":  odd1,
 	})
-	pipeline.SetRunPlan(even, railway.TerminationPlan[int]())
-	pipeline.SetRunPlan(odd1, railway.SuccessOnlyPlan(odd2))
-	pipeline.SetRunPlan(odd2, railway.TerminationPlan[int]())
+	pipeline.SetRunPlan(even, chain.TerminationPlan[int]())
+	pipeline.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
+	pipeline.SetRunPlan(odd2, chain.TerminationPlan[int]())
 
 	return pipeline
 }
 
-func shortcutCollatzFunction() *railway.Pipeline[int] {
+func shortcutCollatzFunction() *chain.Pipeline[int] {
 	branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
-	pipeline := railway.NewPipeline("ShortcutCollatz", branch, even, odd1, odd2)
-	pipeline.SetRunPlan(branch, railway.ActionPlan[int]{
+	pipeline := chain.NewPipeline("ShortcutCollatz", branch, even, odd1, odd2)
+	pipeline.SetRunPlan(branch, chain.ActionPlan[int]{
 		"even": even,
 		"odd":  odd1,
 	})
-	pipeline.SetRunPlan(even, railway.TerminationPlan[int]())
-	pipeline.SetRunPlan(odd1, railway.SuccessOnlyPlan(odd2))
-	pipeline.SetRunPlan(odd2, railway.SuccessOnlyPlan(even))
+	pipeline.SetRunPlan(even, chain.TerminationPlan[int]())
+	pipeline.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
+	pipeline.SetRunPlan(odd2, chain.SuccessOnlyPlan(even))
 
 	return pipeline
 }
 
-func checkNext() railway.Action[int] {
+func checkNext() chain.Action[int] {
 	branchFunc := func(_ context.Context, output int) (direction string, err error) {
 		if output%2 == 0 {
 			return "even", nil
@@ -88,26 +88,26 @@ func checkNext() railway.Action[int] {
 			return "odd", nil
 		}
 	}
-	return railway.NewSimpleBranchAction("CheckNext", nil, []string{"even", "odd"}, branchFunc)
+	return chain.NewSimpleBranchAction("CheckNext", nil, []string{"even", "odd"}, branchFunc)
 }
 
-func half() railway.Action[int] {
+func half() chain.Action[int] {
 	runFunc := func(_ context.Context, input int) (output int, err error) {
 		return input / 2, nil
 	}
-	return railway.NewSimpleAction("Half", runFunc)
+	return chain.NewSimpleAction("Half", runFunc)
 }
 
-func triple() railway.Action[int] {
+func triple() chain.Action[int] {
 	runFunc := func(_ context.Context, input int) (output int, err error) {
 		return input * 3, nil
 	}
-	return railway.NewSimpleAction("Triple", runFunc)
+	return chain.NewSimpleAction("Triple", runFunc)
 }
 
-func inc() railway.Action[int] {
+func inc() chain.Action[int] {
 	runFunc := func(_ context.Context, input int) (output int, err error) {
 		return input + 1, nil
 	}
-	return railway.NewSimpleAction("Inc", runFunc)
+	return chain.NewSimpleAction("Inc", runFunc)
 }
