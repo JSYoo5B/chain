@@ -39,8 +39,8 @@ func half() railway.Action[int] {
 func triple() railway.Action[int] {
     runFunc := func(_ context.Context, input int) (output int, err error) {
         return input * 3, nil
-	}
-return railway.NewSimpleAction("Triple", runFunc)
+    }
+    return railway.NewSimpleAction("Triple", runFunc)
 }
 
 func inc() railway.Action[int] {
