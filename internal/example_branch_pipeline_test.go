@@ -2,7 +2,7 @@ package internal
 
 import (
 	"context"
-	"github.com/JSYoo5B/dago/railway"
+	"github.com/JSYoo5B/railway"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"

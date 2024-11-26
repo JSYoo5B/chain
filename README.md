@@ -23,8 +23,8 @@ Railway is a Go package designed for building and managing **directed acyclic gr
 
 ### Installation
 
-Railway package is part of dago module. Install the package using:
+Install the package using:
 
 ```bash
-go get github.com/JSYoo5B/dago
+go get github.com/JSYoo5B/railway
 ```

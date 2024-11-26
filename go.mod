@@ -1,4 +1,4 @@
-module github.com/JSYoo5B/dago
+module github.com/JSYoo5B/railway
 
 go 1.22
 
