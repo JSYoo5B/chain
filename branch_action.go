@@ -2,25 +2,25 @@ package railway
 
 import "context"
 
-// BranchFunc represents the signature for the function that defines the branching logic in the railway.
-// For more details, refer to the BranchAction.NextDirection method.
-type BranchFunc[T any] func(ctx context.Context, output T) (direction string, err error)
-
+// BranchAction is an interface for actions that control branching in the execution flow
+// of a Pipeline. It extends the Action interface and adds methods for handling conditional
+// branching based on the execution results.
 type BranchAction[T any] interface {
 	// Name returns the name of the BranchAction.
-	// This is typically a unique identifier for the BranchAction that can be
-	// used to distinguish it from other actions in the Pipeline.
 	Name() string
 
-	// Run executes the BranchAction with the given context and input, and returns two values:
-	// - output: The result of the Action's execution.
-	// - err: An error indicating whether the Action failed during execution.
+	// Run executes the branch action, optionally modifying the input and returning an output.
+	// If the input doesn't need changes, it can be passed through as output. The method also
+	// returns an error if the action cannot be executed successfully.
 	Run(ctx context.Context, input T) (output T, err error)
 
-	// Directions returns the possible directions for branching as a slice of strings.
-	// These directions define how the BranchAction can proceed based on the outcome of
-	// its execution and guide the flow in the Pipeline.
+	// Directions returns a list of possible directions that the pipeline can take.
+	// These directions are used for validation and must include all possible values that
+	// NextDirection can return.
 	Directions() []string
 
-	NextDirection(ctx context.Context, output T) (string, error)
+	// NextDirection determines the next execution path based on the result of Run.
+	// It is called only if Run succeeds (err == nil).
+	// The method returns a direction from the list defined by Directions.
+	NextDirection(ctx context.Context, output T) (direction string, err error)
 }

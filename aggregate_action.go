@@ -14,7 +14,11 @@ type AggregateSetter[T any, U any] func(T, U) T
 // where T is a complex type (e.g., a struct with multiple fields) and U is the
 // data type that the Action operates on. The AggregateGetter and AggregateSetter
 // functions are used to extract U from T and re-integrate the processed result back into T.
-func NewAggregateAction[T any, U any](action Action[U], getter AggregateGetter[T, U], setter AggregateSetter[T, U]) Action[T] {
+func NewAggregateAction[T any, U any](
+	action Action[U],
+	getter AggregateGetter[T, U],
+	setter AggregateSetter[T, U],
+) Action[T] {
 	return &aggregateAction[T, U]{
 		action: action,
 		getter: getter,
