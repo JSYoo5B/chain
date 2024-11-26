@@ -157,22 +157,20 @@ func TestRecoverOnRun(t *testing.T) {
 			func(t *testing.T) func() {
 				return func() {
 					pipeline := NewPipeline("Calculation", &Divide{})
-					_, direction, err := pipeline.Run(ctx, 0)
+					_, err := pipeline.Run(ctx, 0)
 
 					assert.Error(t, err)
 					assert.Contains(t, err.Error(), "divide by zero")
-					assert.Equal(t, Abort, direction)
 				}
 			}},
 		"skip actions after recover": {
 			func(t *testing.T) func() {
 				return func() {
 					pipeline := NewPipeline("Calculation", &Divide{}, &SetTen{})
-					output, direction, err := pipeline.Run(ctx, 0)
+					output, err := pipeline.Run(ctx, 0)
 
 					assert.Error(t, err)
 					assert.Contains(t, err.Error(), "divide by zero")
-					assert.Equal(t, Abort, direction)
 					assert.NotEqual(t, 10, output)
 				}
 			}},
@@ -187,11 +185,10 @@ func TestRecoverOnRun(t *testing.T) {
 						subPipeline,
 						&SetTen{name: "runAfterPanic"},
 					)
-					output, direction, err := pipeline.Run(ctx, 0)
+					output, err := pipeline.Run(ctx, 0)
 
 					assert.Error(t, err)
 					assert.Contains(t, err.Error(), "divide by zero")
-					assert.Equal(t, Abort, direction)
 					assert.NotEqual(t, 10, output)
 				}
 			}},
@@ -207,25 +204,22 @@ func TestRecoverOnRun(t *testing.T) {
 
 type Blank struct{ name string }
 
-func (b Blank) Name() string       { return b.name }
-func (Blank) Directions() []string { return []string{Success, Error, Abort} }
-func (Blank) Run(_ context.Context, _ string) (string, string, error) {
-	return "", Abort, nil
+func (b Blank) Name() string { return b.name }
+func (Blank) Run(_ context.Context, _ string) (string, error) {
+	return "", nil
 }
 
 type Divide struct{ name string }
 
-func (Divide) Name() string         { return "Divide" }
-func (Divide) Directions() []string { return []string{Success, Error, Abort} }
-func (Divide) Run(_ context.Context, input int) (output int, direction string, err error) {
+func (Divide) Name() string { return "Divide" }
+func (Divide) Run(_ context.Context, input int) (output int, err error) {
 	// panics when input is zero
-	return 1 / input, Success, nil
+	return 1 / input, nil
 }
 
 type SetTen struct{ name string }
 
-func (SetTen) Name() string         { return "SetTen" }
-func (SetTen) Directions() []string { return []string{Success, Error, Abort} }
-func (SetTen) Run(_ context.Context, _ int) (output int, direction string, err error) {
-	return 10, Success, nil
+func (SetTen) Name() string { return "SetTen" }
+func (SetTen) Run(_ context.Context, _ int) (output int, err error) {
+	return 10, nil
 }

@@ -15,31 +15,27 @@ func TestSimplePipeline(t *testing.T) {
 	collatz := NewCollatz("SingleCollatz")
 	ctx := context.Background()
 	t.Run("Odd input collatz", func(t *testing.T) {
-		output, direction, err := collatz.Run(ctx, 5)
+		output, err := collatz.Run(ctx, 5)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 16, output)
-		assert.Equal(t, Success, direction)
 	})
 	t.Run("Even input collatz", func(t *testing.T) {
-		output, direction, err := collatz.Run(ctx, 16)
+		output, err := collatz.Run(ctx, 16)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 8, output)
-		assert.Equal(t, Success, direction)
 	})
 	t.Run("RunAt onOdd with even input", func(t *testing.T) {
-		output, direction, err := collatz.RunAt(collatz.OnOdd, ctx, 2)
+		output, err := collatz.RunAt(collatz.OnOdd, ctx, 2)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 7, output)
-		assert.Equal(t, Success, direction)
 	})
 	t.Run("RunAt onEven with odd input", func(t *testing.T) {
-		_, direction, err := collatz.RunAt(collatz.OnEven, ctx, 5)
+		_, err := collatz.RunAt(collatz.OnEven, ctx, 5)
 
 		assert.Error(t, err)
-		assert.Equal(t, Error, direction)
 	})
 }
 
@@ -60,34 +56,30 @@ func TestMultiPipeline(t *testing.T) {
 	ctx := context.Background()
 	t.Run("Start with 5", func(t *testing.T) {
 		// 5 -> 16 -> 8 -> 4 -> 2 -> 1
-		output, direction, err := multiCollatz.Run(ctx, 5)
+		output, err := multiCollatz.Run(ctx, 5)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 1, output)
-		assert.Equal(t, Success, direction)
 	})
 	t.Run("Start with 10", func(t *testing.T) {
 		// 10 -> 5 -> 16 -> 8 -> 4 -> 2
-		output, direction, err := multiCollatz.Run(ctx, 10)
+		output, err := multiCollatz.Run(ctx, 10)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 2, output)
-		assert.Equal(t, Success, direction)
 	})
 	t.Run("Start with 1", func(t *testing.T) {
 		// 1 -> 1 -> 1 -> 1 -> 1 -> 1
-		output, direction, err := multiCollatz.Run(ctx, 1)
+		output, err := multiCollatz.Run(ctx, 1)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 1, output)
-		assert.Equal(t, Abort, direction)
 	})
 	t.Run("Start with 0", func(t *testing.T) {
 		// 0 -> Finish (terminated by error)
-		_, direction, err := multiCollatz.Run(ctx, 0)
+		_, err := multiCollatz.Run(ctx, 0)
 
 		assert.Error(t, err)
-		assert.Equal(t, Error, direction)
 	})
 }
 
@@ -104,11 +96,10 @@ func TestErrorPropagation(t *testing.T) {
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(error2) -> 8
-		output, direction, err := pipeline.Run(context.Background(), 5)
+		output, err := pipeline.Run(context.Background(), 5)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "error2")
-		assert.Equal(t, Error, direction)
 		assert.Equal(t, 8, output)
 	})
 
@@ -122,11 +113,10 @@ func TestErrorPropagation(t *testing.T) {
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(error2) -> 16(error3)
-		output, direction, err := pipeline.Run(context.Background(), 5)
+		output, err := pipeline.Run(context.Background(), 5)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "error3")
-		assert.Equal(t, Error, direction)
 		assert.Equal(t, 16, output)
 	})
 
@@ -140,11 +130,10 @@ func TestErrorPropagation(t *testing.T) {
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(panic2) -> abort
-		output, direction, err := pipeline.Run(context.Background(), 5)
+		output, err := pipeline.Run(context.Background(), 5)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "panic2")
-		assert.Equal(t, Abort, direction)
 		assert.Equal(t, 16, output)
 	})
 
@@ -158,11 +147,10 @@ func TestErrorPropagation(t *testing.T) {
 		pipeline.SetRunPlan(action3, TerminationPlan[int]())
 
 		// 5 -> 16 -> 16(panic2) -(abort)-> 8
-		output, direction, err := pipeline.Run(context.Background(), 5)
+		output, err := pipeline.Run(context.Background(), 5)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "panic2")
-		assert.Equal(t, Error, direction)
 		assert.Equal(t, 8, output)
 	})
 
@@ -182,11 +170,10 @@ func TestErrorPropagation(t *testing.T) {
 		pipeline.SetRunPlan(action4, TerminationPlan[int]())
 
 		// 5 -> [16 -> 8 -> 8(error2) -> 4] -> 2
-		output, direction, err := pipeline.Run(context.Background(), 5)
+		output, err := pipeline.Run(context.Background(), 5)
 
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "error2")
-		assert.Equal(t, Error, direction)
 		assert.Equal(t, 2, output)
 	})
 }
@@ -231,50 +218,49 @@ type CheckNext struct{}
 
 func (CheckNext) Name() string         { return "CheckNext" }
 func (CheckNext) Directions() []string { return []string{"even", "odd"} }
-func (CheckNext) Run(_ context.Context, input int) (output int, direction string, err error) {
-	if input == 1 {
-		return input, Abort, nil
-	} else if input == 0 {
-		return input, Error, fmt.Errorf("cannot try collatz with 0")
-	} else if input%2 == 0 {
-		return input, "even", nil
+func (CheckNext) Run(_ context.Context, input int) (output int, err error) {
+	return input, nil
+}
+func (CheckNext) NextDirection(_ context.Context, output int) (direction string, err error) {
+	if output == 1 {
+		return Abort, nil
+	} else if output == 0 {
+		return Error, fmt.Errorf("cannot try collatz with 0")
+	} else if output%2 == 0 {
+		return "even", nil
 	} else {
-		return input, "odd", nil
+		return "odd", nil
 	}
 }
 
 type OnEven struct{}
 
-func (OnEven) Name() string         { return "OnEven" }
-func (OnEven) Directions() []string { return []string{Success, Error, Abort} }
-func (OnEven) Run(_ context.Context, input int) (output int, direction string, err error) {
+func (OnEven) Name() string { return "OnEven" }
+func (OnEven) Run(_ context.Context, input int) (output int, err error) {
 	if input%2 != 0 {
 		// direction is intended bug. on running pipeline, it should be changed as Error
-		return input, Success, fmt.Errorf("input is not even")
+		return input, fmt.Errorf("input is not even")
 	}
-	return input / 2, Success, nil
+	return input / 2, nil
 }
 
 type OnOdd struct{}
 
-func (OnOdd) Name() string         { return "OnOdd" }
-func (OnOdd) Directions() []string { return []string{Success, Error, Abort} }
-func (OnOdd) Run(_ context.Context, input int) (output int, direction string, err error) {
-	return 3*input + 1, Success, nil
+func (OnOdd) Name() string { return "OnOdd" }
+func (OnOdd) Run(_ context.Context, input int) (output int, err error) {
+	return 3*input + 1, nil
 }
 
 type ErrorMaker struct{ message string }
 
-func (e ErrorMaker) Name() string       { return e.message }
-func (ErrorMaker) Directions() []string { return []string{Success, Error, Abort} }
-func (e ErrorMaker) Run(_ context.Context, input int) (output int, direction string, err error) {
-	return input, Error, errors.New(e.message)
+func (e ErrorMaker) Name() string { return e.message }
+func (e ErrorMaker) Run(_ context.Context, input int) (output int, err error) {
+	return input, errors.New(e.message)
 }
 
 type PanicMaker struct{ message string }
 
-func (p PanicMaker) Name() string       { return p.message }
-func (PanicMaker) Directions() []string { return []string{Success, Error, Abort} }
-func (p PanicMaker) Run(_ context.Context, _ int) (output int, direction string, err error) {
+func (p PanicMaker) Name() string { return p.message }
+func (p PanicMaker) Run(_ context.Context, _ int) (output int, err error) {
 	panic(errors.New(p.message))
 }

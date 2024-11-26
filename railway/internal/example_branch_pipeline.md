@@ -19,39 +19,37 @@ Each arithmetic operation (division, multiplication, or addition) is represented
 
 ```golang
 func checkNext() railway.Action[int] {
-    runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-        if input%2 == 0 {
-            return input, "even", nil
+    branchFunc := func(_ context.Context, output int) (direction string, err error) {
+        if output%2 == 0 {
+            return "even", nil
         } else {
-            return input, "odd", nil
+            return "odd", nil
         }
     }
-    return railway.NewSimpleBranchAction("CheckNext", []string{"even", "odd"}, runFunc)
+    return railway.NewSimpleBranchAction("CheckNext", nil, []string{"even", "odd"}, branchFunc)
 }
 
 func half() railway.Action[int] {
-    runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-        if input%2 != 0 {
-            return input, railway.Error, fmt.Errorf("cannot try half with odd")
-        }
-        return input / 2, railway.Success, nil
+    runFunc := func(_ context.Context, input int) (output int, err error) {
+        return input / 2, nil
     }
     return railway.NewSimpleAction("Half", runFunc)
 }
 
 func triple() railway.Action[int] {
-    runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-        return input * 3, railway.Success, nil
-    }
-    return railway.NewSimpleAction("Triple", runFunc)
+    runFunc := func(_ context.Context, input int) (output int, err error) {
+        return input * 3, nil
+	}
+return railway.NewSimpleAction("Triple", runFunc)
 }
 
 func inc() railway.Action[int] {
-    runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-        return input + 1, railway.Success, nil
+    runFunc := func(_ context.Context, input int) (output int, err error) {
+        return input + 1, nil
     }
     return railway.NewSimpleAction("Inc", runFunc)
 }
+
 ```
 
 ### Pipeline Implementation

@@ -12,15 +12,15 @@ import (
 // where the generic types are different, making it impossible to handle them within a single pipeline.
 
 func newIncAction(name string) railway.Action[int] {
-	runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-		return input + 1, railway.Success, nil
+	runFunc := func(_ context.Context, input int) (output int, err error) {
+		return input + 1, nil
 	}
 	return railway.NewSimpleAction(name, runFunc)
 }
 
 func newAppendAction(name string) railway.Action[string] {
-	runFunc := func(_ context.Context, input string) (output string, direction string, err error) {
-		return input + "o", railway.Success, nil
+	runFunc := func(_ context.Context, input string) (output string, err error) {
+		return input + "o", nil
 	}
 	return railway.NewSimpleAction(name, runFunc)
 }
@@ -70,10 +70,9 @@ func TestAggregatePipeline(t *testing.T) {
 
 		input := Wrap{number: 10, message: "f"}
 		// {10, f} -> {11, f} -> {11, fo} -> {12, fo} -> {13, fo} -> {13, foo}
-		output, direction, err := aggregatePipeline.Run(context.Background(), input)
+		output, err := aggregatePipeline.Run(context.Background(), input)
 
 		assert.NoError(t, err)
-		assert.Equal(t, railway.Success, direction)
 		assert.Equal(t, 13, output.number)
 		assert.Equal(t, "foo", output.message)
 	})
@@ -109,10 +108,9 @@ func TestAggregatePipeline(t *testing.T) {
 		// {10, f} -> {11, f} -> {12, f}
 		// -> {12, fo} -> {12, foo}
 		// -> {13, foo} -> {14, foo} -> {15, foo} -> {16, foo} -> {17, foo}
-		output, direction, err := aggregatePipeline.Run(context.Background(), input)
+		output, err := aggregatePipeline.Run(context.Background(), input)
 
 		assert.NoError(t, err)
-		assert.Equal(t, railway.Success, direction)
 		assert.Equal(t, 17, output.number)
 		assert.Equal(t, "foo", output.message)
 	})

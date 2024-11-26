@@ -252,8 +252,7 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 
 type DirectingAction struct{ name string }
 
-func (d DirectingAction) Name() string         { return d.name }
-func (d DirectingAction) Directions() []string { return []string{Success, Error} }
-func (d DirectingAction) Run(_ context.Context, _ int) (int, string, error) {
-	return 0, Success, nil
+func (d DirectingAction) Name() string { return d.name }
+func (d DirectingAction) Run(_ context.Context, _ int) (int, error) {
+	return 0, nil
 }

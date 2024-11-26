@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"fmt"
 	"github.com/JSYoo5B/dago/railway"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -17,41 +16,37 @@ func TestBranchingPipeline(t *testing.T) {
 		simple := basicCollatzFunction()
 
 		// 5 -odd-> (5*3=)15 -> (15+1=)16
-		output, direction, err := simple.Run(ctx, 5)
+		output, err := simple.Run(ctx, 5)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 16, output)
-		assert.Equal(t, railway.Success, direction)
 	})
 	t.Run("Basic Collatz with even input(16)", func(t *testing.T) {
 		simple := basicCollatzFunction()
 
 		// 16 -even-> (16/2=)8
-		output, direction, err := simple.Run(ctx, 16)
+		output, err := simple.Run(ctx, 16)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 8, output)
-		assert.Equal(t, railway.Success, direction)
 	})
 	t.Run("Shortcut Collatz with odd input(5)", func(t *testing.T) {
 		shortcut := shortcutCollatzFunction()
 
 		// 5 -odd-> (5*3=)15 -> (15+1=)16 -> (16/2=)8
-		output, direction, err := shortcut.Run(ctx, 5)
+		output, err := shortcut.Run(ctx, 5)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 8, output)
-		assert.Equal(t, railway.Success, direction)
 	})
 	t.Run("Shortcut Collatz with even input(16)", func(t *testing.T) {
 		shortcut := shortcutCollatzFunction()
 
 		// 16 -even-> (16/2=)8
-		output, direction, err := shortcut.Run(ctx, 16)
+		output, err := shortcut.Run(ctx, 16)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 8, output)
-		assert.Equal(t, railway.Success, direction)
 	})
 }
 
@@ -86,36 +81,33 @@ func shortcutCollatzFunction() *railway.Pipeline[int] {
 }
 
 func checkNext() railway.Action[int] {
-	runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-		if input%2 == 0 {
-			return input, "even", nil
+	branchFunc := func(_ context.Context, output int) (direction string, err error) {
+		if output%2 == 0 {
+			return "even", nil
 		} else {
-			return input, "odd", nil
+			return "odd", nil
 		}
 	}
-	return railway.NewSimpleBranchAction("CheckNext", []string{"even", "odd"}, runFunc)
+	return railway.NewSimpleBranchAction("CheckNext", nil, []string{"even", "odd"}, branchFunc)
 }
 
 func half() railway.Action[int] {
-	runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-		if input%2 != 0 {
-			return input, railway.Error, fmt.Errorf("cannot try half with odd")
-		}
-		return input / 2, railway.Success, nil
+	runFunc := func(_ context.Context, input int) (output int, err error) {
+		return input / 2, nil
 	}
 	return railway.NewSimpleAction("Half", runFunc)
 }
 
 func triple() railway.Action[int] {
-	runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-		return input * 3, railway.Success, nil
+	runFunc := func(_ context.Context, input int) (output int, err error) {
+		return input * 3, nil
 	}
 	return railway.NewSimpleAction("Triple", runFunc)
 }
 
 func inc() railway.Action[int] {
-	runFunc := func(_ context.Context, input int) (output int, direction string, err error) {
-		return input + 1, railway.Success, nil
+	runFunc := func(_ context.Context, input int) (output int, err error) {
+		return input + 1, nil
 	}
 	return railway.NewSimpleAction("Inc", runFunc)
 }

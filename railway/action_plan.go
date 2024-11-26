@@ -20,7 +20,7 @@ const (
 )
 
 // TerminationPlan returns an ActionPlan with all directions leading to termination immediately,
-// providing a clear indication of termination rather than returning nil.
+// providing a clear indication of termination rather than using nil.
 func TerminationPlan[T any]() ActionPlan[T] {
 	return nil
 }

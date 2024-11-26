@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"runtime/debug"
 )
 
 type Pipeline[T any] struct {
@@ -50,7 +51,11 @@ func NewPipeline[T any](name string, memberActions ...Action[T]) *Pipeline[T] {
 		}
 
 		defaultPlan := ActionPlan[T]{}
-		for _, direction := range append(action.Directions(), Error, Abort) {
+		availableDirections := []string{Success, Error, Abort}
+		if branchAction, isBranchAction := action.(BranchAction[T]); isBranchAction {
+			availableDirections = append(availableDirections, branchAction.Directions()...)
+		}
+		for _, direction := range availableDirections {
 			if _, exists := defaultPlan[direction]; !exists {
 				defaultPlan[direction] = terminate
 			}
@@ -83,7 +88,11 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 
 	// Set next action to terminate when allowed directions were not specified in plan
 	terminate := Terminate[T]()
-	for _, direction := range append(currentAction.Directions(), Success, Error, Abort) {
+	availableDirections := []string{Success, Error, Abort}
+	if branchAction, isBranchAction := currentAction.(BranchAction[T]); isBranchAction {
+		availableDirections = append(availableDirections, branchAction.Directions()...)
+	}
+	for _, direction := range append(availableDirections, Success, Error, Abort) {
 		if _, exists := plan[direction]; !exists {
 			plan[direction] = terminate
 		}
@@ -97,7 +106,7 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 		}
 
 		// If the direction is not in currentAction's valid directions, panic
-		if !contains(currentAction.Directions(), direction) {
+		if !contains(availableDirections, direction) {
 			err = fmt.Errorf("`%s` does not support direction `%s`", currentAction.Name(), direction)
 		} else if !isMemberActionInPipeline(nextAction, p) {
 			err = fmt.Errorf("setting plan from `%s` directing `%s` to non-member `%s`", currentAction.Name(), direction, nextAction.Name())
@@ -116,18 +125,14 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 // Name returns the name of the Pipeline, which is a distinguishable identifier for the pipeline.
 func (p *Pipeline[T]) Name() string { return p.name }
 
-// Directions returns the basic directions: Success, Error, and Abort.
-// Since Pipeline is treated as a non-branching Action, it only supports these basic directions.
-// Other custom directions are not allowed for a Pipeline, as it doesn't support branching behavior.
-func (p *Pipeline[T]) Directions() []string { return []string{Success, Error, Abort} }
-
 // Run executes its member Action within the Pipeline sequentially
 // from the initAction to termination, following the specified ActionPlan.
 // The initAction refers to the first Action
 // in the memberActions provided as an argument to NewPipeline.
-func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction string, err error) {
+func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, err error) {
 	if len(p.runPlans) == 1 {
-		return runAction(p.initAction, ctx, input)
+		output, _, err = runAction(p.initAction, ctx, input)
+		return output, err
 	}
 
 	return p.RunAt(p.initAction, ctx, input)
@@ -141,9 +146,9 @@ func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, direction str
 // the plan specifies otherwise.
 // If no action plan is found for a given direction,
 // the pipeline will terminate with the appropriate error.
-func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, direction string, lastErr error) {
+func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, lastErr error) {
 	if !isMemberActionInPipeline(initAction, p) {
-		return input, Error, errors.New("given initAction is not registered on constructor")
+		return input, errors.New("given initAction is not registered on constructor")
 	}
 
 	runnerName := p.name
@@ -156,6 +161,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		terminate     = Terminate[T]()
 		currentAction Action[T]
 		nextAction    Action[T]
+		direction     string
 		runErr        error
 		selectErr     error
 	)
@@ -186,7 +192,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		direction = Error
 	}
 
-	return output, direction, lastErr
+	return output, lastErr
 }
 
 const parentRunner = "PipelineParentRunner"
@@ -218,4 +224,36 @@ func contains(directions []string, direction string) bool {
 func isMemberActionInPipeline[T any](action Action[T], p *Pipeline[T]) bool {
 	_, exists := p.runPlans[action]
 	return exists
+}
+
+func runAction[T any](action Action[T], ctx context.Context, input T) (output T, direction string, runError error) {
+	// Wrap panic handling for safe running in pipeline
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			logrus.Errorf("%s: panic occurred on running, caused by %s", action.Name(), panicErr)
+			debug.PrintStack()
+
+			output = input
+			direction = Abort
+			switch x := panicErr.(type) {
+			case string:
+				runError = errors.New(x)
+			case error:
+				runError = x
+			default:
+				runError = errors.New("unknown panic type")
+			}
+		}
+	}()
+
+	output, runError = action.Run(ctx, input)
+	if runError != nil {
+		return output, Error, runError
+	}
+	direction = Success
+	if branchAction, isBranchAction := action.(BranchAction[T]); isBranchAction {
+		direction, runError = branchAction.NextDirection(ctx, output)
+	}
+
+	return output, direction, runError
 }
