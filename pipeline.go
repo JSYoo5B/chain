@@ -102,7 +102,7 @@ func (p *Pipeline[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 	if branchAction, isBranchAction := currentAction.(BranchAction[T]); isBranchAction {
 		availableDirections = append(availableDirections, branchAction.Directions()...)
 	}
-	for _, direction := range append(availableDirections) {
+	for _, direction := range availableDirections {
 		if _, exists := plan[direction]; !exists {
 			plan[direction] = terminate
 		}
