@@ -1,4 +1,4 @@
-package chain
+package logger
 
 import (
 	"github.com/sirupsen/logrus"
@@ -19,7 +19,7 @@ func (c *runnerNameHook) Fire(entry *logrus.Entry) error {
 		return nil
 	}
 
-	if runnerName, ok := entry.Context.Value(runnerNameKey{}).(string); ok {
+	if runnerName, ok := RunnerNameFromContext(entry.Context); ok {
 		entry.Data["runnerName"] = runnerName
 	}
 

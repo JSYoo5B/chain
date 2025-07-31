@@ -1,4 +1,4 @@
-package chain
+package logger
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 type runnerNameKey struct{}
 
-func appendRunnerName(ctx context.Context, currentRunner string) context.Context {
+func WithRunnerDepth(ctx context.Context, currentRunner string) context.Context {
 	runnerName := currentRunner
 	if parentName := ctx.Value(runnerNameKey{}); parentName != nil {
 		runnerName = parentName.(string)
@@ -18,4 +18,13 @@ func appendRunnerName(ctx context.Context, currentRunner string) context.Context
 	}
 
 	return context.WithValue(ctx, runnerNameKey{}, runnerName)
+}
+
+func RunnerNameFromContext(ctx context.Context) (string, bool) {
+	if ctx == nil {
+		return "", false
+	}
+
+	runnerName, ok := ctx.Value(runnerNameKey{}).(string)
+	return runnerName, ok
 }

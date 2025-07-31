@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/JSYoo5B/chain/internal/logger"
 	"github.com/sirupsen/logrus"
 	"runtime/debug"
 )
@@ -161,7 +162,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		return input, errors.New("given initAction is not registered on constructor")
 	}
 
-	ctx = appendRunnerName(ctx, p.name)
+	ctx = logger.WithRunnerDepth(ctx, p.name)
 
 	var (
 		terminate     = Terminate[T]()
@@ -250,7 +251,7 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 		}
 	}()
 
-	ctx = appendRunnerName(ctx, action.Name())
+	ctx = logger.WithRunnerDepth(ctx, action.Name())
 
 	output, runError = action.Run(ctx, input)
 	if runError != nil {
