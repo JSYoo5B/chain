@@ -1,11 +1,24 @@
 package logger
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
 )
 
 func init() {
 	logrus.AddHook(&runnerNameHook{})
+}
+
+func Debugf(ctx context.Context, format string, args ...interface{}) {
+	logrus.WithContext(ctx).Debugf(format, args...)
+}
+
+func Errorf(ctx context.Context, format string, args ...interface{}) {
+	logrus.WithContext(ctx).Errorf(format, args...)
+}
+
+func Error(ctx context.Context, err error) {
+	logrus.WithContext(ctx).Error(err)
 }
 
 type runnerNameHook struct{}
