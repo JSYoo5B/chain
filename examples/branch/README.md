@@ -1,6 +1,6 @@
 # Branching in Chain: A Case Study with Collatz Conjecture
 
-Full test code available: [example_branch_pipeline_test.go](example_branch_pipeline_test.go)
+Full test code available: [collatz.go](collatz.go)
 
 Chain `Pipeline`s support branching logic, enabling conditional execution paths where subsequent `Action`s depend on prior results. This feature is particularly useful for problems where outcomes vary based on specific conditions.
 

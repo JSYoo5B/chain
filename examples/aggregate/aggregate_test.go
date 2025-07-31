@@ -1,4 +1,4 @@
-package internal
+package aggregate
 
 import (
 	"context"
@@ -12,14 +12,16 @@ import (
 // where the generic types are different, making it impossible to handle them within a single pipeline.
 
 func newIncAction(name string) chain.Action[int] {
-	runFunc := func(_ context.Context, input int) (output int, err error) {
+	runFunc := func(ctx context.Context, input int) (output int, err error) {
+		logrus.WithContext(ctx).Infof("Increasing %d to %d", input, input+1)
 		return input + 1, nil
 	}
 	return chain.NewSimpleAction(name, runFunc)
 }
 
 func newAppendAction(name string) chain.Action[string] {
-	runFunc := func(_ context.Context, input string) (output string, err error) {
+	runFunc := func(ctx context.Context, input string) (output string, err error) {
+		logrus.WithContext(ctx).Infof("Appending %s with trailing o", input)
 		return input + "o", nil
 	}
 	return chain.NewSimpleAction(name, runFunc)
