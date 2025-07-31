@@ -10,15 +10,21 @@ func init() {
 }
 
 func Debugf(ctx context.Context, format string, args ...interface{}) {
-	logrus.WithContext(ctx).Debugf(format, args...)
+	if logrus.IsLevelEnabled(logrus.DebugLevel) {
+		logrus.WithContext(ctx).Debugf(format, args...)
+	}
 }
 
 func Errorf(ctx context.Context, format string, args ...interface{}) {
-	logrus.WithContext(ctx).Errorf(format, args...)
+	if logrus.IsLevelEnabled(logrus.ErrorLevel) {
+		logrus.WithContext(ctx).Errorf(format, args...)
+	}
 }
 
 func Error(ctx context.Context, err error) {
-	logrus.WithContext(ctx).Error(err)
+	if logrus.IsLevelEnabled(logrus.ErrorLevel) {
+		logrus.WithContext(ctx).Error(err)
+	}
 }
 
 type runnerNameHook struct{}
