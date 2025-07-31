@@ -8,69 +8,20 @@ import (
 	"testing"
 )
 
-// The following functions create two types of actions, Action[int] and Action[string],
-// where the generic types are different, making it impossible to handle them within a single pipeline.
-
-func newIncAction(name string) chain.Action[int] {
-	runFunc := func(ctx context.Context, input int) (output int, err error) {
-		logrus.WithContext(ctx).Infof("Increasing %d to %d", input, input+1)
-		return input + 1, nil
-	}
-	return chain.NewSimpleAction(name, runFunc)
-}
-
-func newAppendAction(name string) chain.Action[string] {
-	runFunc := func(ctx context.Context, input string) (output string, err error) {
-		logrus.WithContext(ctx).Infof("Appending %s with trailing o", input)
-		return input + "o", nil
-	}
-	return chain.NewSimpleAction(name, runFunc)
-}
-
-// By aggregating int and string into a single `Wrap` struct,
-// new actions are defined for `Action[Wrap]` which combine each `Action[int]` and `Action[string]`.
-// This enables handling different types of actions within a single pipeline.
-
-type Wrap struct {
-	number  int
-	message string
-}
-
-func newNumberAction(action chain.Action[int]) chain.Action[Wrap] {
-	getter := func(c Wrap) int { return c.number }
-	setter := func(c Wrap, i int) Wrap {
-		c.number = i
-		return c
-	}
-	return chain.NewAggregateAction(action, getter, setter)
-}
-
-func newMessageAction(action chain.Action[string]) chain.Action[Wrap] {
-	getter := func(c Wrap) string { return c.message }
-	setter := func(c Wrap, s string) Wrap {
-		c.message = s
-		return c
-	}
-	return chain.NewAggregateAction(action, getter, setter)
-}
-
-// This test demonstrates how different types of actions can be handled within a single pipeline.
-// It shows that both simple Action and Pipeline (treated as Action) can be combined and processed together.
-
 func TestAggregatePipeline(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	t.Run("simple aggregate pipeline", func(t *testing.T) {
 		aggregatePipeline := chain.NewPipeline(
 			"ActionAggregateTest",
-			newNumberAction(newIncAction("action1")),
-			newMessageAction(newAppendAction("action2")),
-			newNumberAction(newIncAction("action3")),
-			newNumberAction(newIncAction("action4")),
-			newMessageAction(newAppendAction("action5")),
+			numberToPair(newIncAction("action1")),
+			messageToPair(newAppendAction("action2")),
+			numberToPair(newIncAction("action3")),
+			numberToPair(newIncAction("action4")),
+			messageToPair(newAppendAction("action5")),
 		)
 
-		input := Wrap{number: 10, message: "f"}
+		input := Pair{number: 10, message: "f"}
 		// {10, f} -> {11, f} -> {11, fo} -> {12, fo} -> {13, fo} -> {13, foo}
 		output, err := aggregatePipeline.Run(context.Background(), input)
 
@@ -101,12 +52,12 @@ func TestAggregatePipeline(t *testing.T) {
 
 		aggregatePipeline := chain.NewPipeline(
 			"PipelineAggregateTest",
-			newNumberAction(inc2Action),
-			newMessageAction(append2Action),
-			newNumberAction(inc5Action),
+			numberToPair(inc2Action),
+			messageToPair(append2Action),
+			numberToPair(inc5Action),
 		)
 
-		input := Wrap{number: 10, message: "f"}
+		input := Pair{number: 10, message: "f"}
 		// {10, f} -> {11, f} -> {12, f}
 		// -> {12, fo} -> {12, foo}
 		// -> {13, foo} -> {14, foo} -> {15, foo} -> {16, foo} -> {17, foo}
