@@ -8,9 +8,13 @@ import (
 type runnerNameKey struct{}
 
 func WithRunnerDepth(ctx context.Context, currentRunner string) context.Context {
+	if ctx == nil {
+		panic("cannot create context from nil parent")
+	}
+
 	runnerName := currentRunner
-	if parentName := ctx.Value(runnerNameKey{}); parentName != nil {
-		runnerName = parentName.(string)
+	if parentName, ok := ctx.Value(runnerNameKey{}).(string); ok {
+		runnerName = parentName
 	}
 
 	if !strings.HasSuffix(runnerName, currentRunner) {
