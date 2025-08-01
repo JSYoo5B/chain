@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"github.com/JSYoo5B/chain/internal/logger"
 	"runtime/debug"
 )
 
@@ -161,11 +161,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		return input, errors.New("given initAction is not registered on constructor")
 	}
 
-	runnerName := p.name
-	if parentName := ctx.Value(parentRunner); parentName != nil {
-		runnerName = parentName.(string) + "/" + p.name
-	}
-	ctx = context.WithValue(ctx, parentRunner, runnerName)
+	ctx = logger.WithRunnerDepth(ctx, p.name)
 
 	var (
 		terminate     = Terminate[T]()
@@ -175,13 +171,13 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		runErr        error
 		selectErr     error
 	)
-	logrus.Debugf("%s: Start running with `%s`", runnerName, initAction.Name())
+	logger.Debugf(ctx, "chain: start running with `%s`", initAction.Name())
 	for currentAction = initAction; currentAction != nil; currentAction = nextAction {
 		output, direction, runErr = runAction(currentAction, ctx, input)
 
 		nextAction, selectErr = selectNextAction(p.runPlans[currentAction], currentAction, direction)
 		if selectErr != nil {
-			logrus.Error(selectErr)
+			logger.Error(ctx, selectErr)
 			direction = Abort
 			lastErr = selectErr
 			break
@@ -191,7 +187,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		if nextAction != terminate {
 			nextActionName = nextAction.Name()
 		}
-		logrus.Debugf("%s: `%s` directs `%s`, selecting `%s`", runnerName, currentAction.Name(), direction, nextActionName)
+		logger.Debugf(ctx, "chain: `%s` directs `%s`, selecting `%s`", currentAction.Name(), direction, nextActionName)
 
 		input = output
 		if runErr != nil {
@@ -204,8 +200,6 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 
 	return output, lastErr
 }
-
-const parentRunner = "PipelineParentRunner"
 
 func selectNextAction[T any](plan ActionPlan[T], currentAction Action[T], direction string) (nextAction Action[T], err error) {
 	var (
@@ -240,7 +234,7 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 	// Wrap panic handling for safe running in pipeline
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
-			logrus.Errorf("%s: panic occurred on running, caused by %s", action.Name(), panicErr)
+			logger.Errorf(ctx, "chain: panic occurred on running, caused by %s", panicErr)
 			debug.PrintStack()
 
 			output = input
@@ -255,6 +249,8 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 			}
 		}
 	}()
+
+	ctx = logger.WithRunnerDepth(ctx, action.Name())
 
 	output, runError = action.Run(ctx, input)
 	if runError != nil {

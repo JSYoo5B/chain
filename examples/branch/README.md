@@ -1,6 +1,6 @@
 # Branching in Chain: A Case Study with Collatz Conjecture
 
-Full test code available: [example_branch_pipeline_test.go](example_branch_pipeline_test.go)
+Full test code available: [collatz.go](collatz.go)
 
 Chain `Pipeline`s support branching logic, enabling conditional execution paths where subsequent `Action`s depend on prior results. This feature is particularly useful for problems where outcomes vary based on specific conditions.
 
@@ -103,18 +103,18 @@ func basicCollatzFunction() *chain.Pipeline[int] {
 Logs for an odd input:
 
 ```text
-level=debug msg="SimpleCollatz: Start running with `CheckNext`"
-level=debug msg="SimpleCollatz: `CheckNext` directs `odd`, selecting `Triple`"
-level=debug msg="SimpleCollatz: `Triple` directs `success`, selecting `Inc`"
-level=debug msg="SimpleCollatz: `Inc` directs `success`, selecting `termination`"
+level=debug msg="chain: start running with `CheckNext`" runnerName=SimpleCollatz
+level=debug msg="chain: `CheckNext` directs `odd`, selecting `Triple`" runnerName=SimpleCollatz
+level=debug msg="chain: `Triple` directs `success`, selecting `Inc`" runnerName=SimpleCollatz
+level=debug msg="chain: `Inc` directs `success`, selecting `termination`" runnerName=SimpleCollatz
 ```
 
 Logs for an even input:
 
 ```text
-level=debug msg="SimpleCollatz: Start running with `CheckNext`"
-level=debug msg="SimpleCollatz: `CheckNext` directs `even`, selecting `Half`"
-level=debug msg="SimpleCollatz: `Half` directs `success`, selecting `termination`"
+level=debug msg="chain: start running with `CheckNext`" runnerName=SimpleCollatz
+level=debug msg="chain: `CheckNext` directs `even`, selecting `Half`" runnerName=SimpleCollatz
+level=debug msg="chain: `Half` directs `success`, selecting `termination`" runnerName=SimpleCollatz
 ```
 
 ## Shortcut form of the Collatz Conjecture to Pipeline
@@ -176,18 +176,18 @@ func shortcutCollatzFunction() *chain.Pipeline[int] {
 Logs for an odd input:
 
 ```text
-level=debug msg="ShortcutCollatz: Start running with `CheckNext`"
-level=debug msg="ShortcutCollatz: `CheckNext` directs `odd`, selecting `Triple`"
-level=debug msg="ShortcutCollatz: `Triple` directs `success`, selecting `Inc`"
-level=debug msg="ShortcutCollatz: `Inc` directs `success`, selecting `Half`"
-level=debug msg="ShortcutCollatz: `Half` directs `success`, selecting `termination`"
+level=debug msg="chain: start running with `CheckNext`" runnerName=ShortcutCollatz
+level=debug msg="chain: `CheckNext` directs `odd`, selecting `Triple`" runnerName=ShortcutCollatz
+level=debug msg="chain: `Triple` directs `success`, selecting `Inc`" runnerName=ShortcutCollatz
+level=debug msg="chain: `Inc` directs `success`, selecting `Half`" runnerName=ShortcutCollatz
+level=debug msg="chain: `Half` directs `success`, selecting `termination`" runnerName=ShortcutCollatz
 ```
 
 Logs for an even input:
 
 ```text
-level=debug msg="ShortcutCollatz: Start running with `CheckNext`"
-level=debug msg="ShortcutCollatz: `CheckNext` directs `even`, selecting `Half`"
-level=debug msg="ShortcutCollatz: `Half` directs `success`, selecting `termination`"
+level=debug msg="chain: start running with `CheckNext`" runnerName=ShortcutCollatz
+level=debug msg="chain: `CheckNext` directs `even`, selecting `Half`" runnerName=ShortcutCollatz
+level=debug msg="chain: `Half` directs `success`, selecting `termination`" runnerName=ShortcutCollatz
 ```
 
