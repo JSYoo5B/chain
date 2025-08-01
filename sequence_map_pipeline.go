@@ -1,0 +1,61 @@
+package chain
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/JSYoo5B/chain/internal/logger"
+	"maps"
+	"runtime/debug"
+)
+
+func NewSequenceMapPipeline[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
+	return &sequenceMapPipeline[K, T]{
+		name:   name,
+		action: action,
+	}
+}
+
+type sequenceMapPipeline[K comparable, T any] struct {
+	name   string
+	action Action[T]
+}
+
+func (s sequenceMapPipeline[K, T]) Name() string { return s.name }
+func (s sequenceMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (output map[K]T, err error) {
+	pCtx := logger.WithRunnerDepth(ctx, s.name)
+	output = make(map[K]T)
+	maps.Copy(output, input)
+
+	// Wrap panic handling for safe running in a pipeline
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			logger.Errorf(pCtx, "chain: panic occurred on running, caused by %v", panicErr)
+			debug.PrintStack()
+
+			switch x := panicErr.(type) {
+			case string:
+				err = errors.New(x)
+			case error:
+				err = x
+			default:
+				err = errors.New("unknown panic type")
+			}
+		}
+	}()
+
+	for k, in := range input {
+		logger.Debugf(pCtx, "chain: running key `%v`", k)
+
+		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%v]/%s", s.name, k, s.action.Name()))
+
+		out, e := s.action.Run(c, in)
+		if e != nil {
+			logger.Errorf(pCtx, "chain: error occurred in key `%v`: %v", k, e)
+			err = e
+		}
+		output[k] = out
+	}
+
+	return output, err
+}
