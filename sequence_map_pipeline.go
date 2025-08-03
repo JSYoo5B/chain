@@ -9,6 +9,11 @@ import (
 	"runtime/debug"
 )
 
+// NewSequenceMapPipeline creates an Action that processes a map's values sequentially.
+// Each value is transformed by the given action one at a time, maintaining the original keys.
+//
+// Unlike parallel processing, sequential execution stops immediately when a panic occurs,
+// leaving unprocessed values unchanged in the output.
 func NewSequenceMapPipeline[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
 	return &sequenceMapPipeline[K, T]{
 		name:   name,

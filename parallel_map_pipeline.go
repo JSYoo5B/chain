@@ -10,6 +10,12 @@ import (
 	"sync"
 )
 
+// NewParallelMapPipeline creates an Action that processes a map's values in parallel.
+// Each value is transformed by the given action concurrently, maintaining the original keys.
+//
+// The pipeline handles panics gracefully, continuing execution of other goroutines
+// when one fails. If any error or panic occurs, the pipeline returns an error
+// but still provides the processed output for successful operations.
 func NewParallelMapPipeline[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
 	return &parallelMapPipeline[K, T]{
 		name:   name,

@@ -9,6 +9,12 @@ import (
 	"sync"
 )
 
+// NewParallelSlicePipeline creates an Action that processes a slice's elements in parallel.
+// Each element is transformed by the given action concurrently, maintaining the original order.
+//
+// The pipeline handles panics gracefully, continuing execution of other goroutines
+// when one fails. If any error or panic occurs, the pipeline returns an error
+// but still provides the processed output for successful operations.
 func NewParallelSlicePipeline[T any](name string, action Action[T]) Action[[]T] {
 	return &parallelSlicePipeline[T]{
 		name:   name,

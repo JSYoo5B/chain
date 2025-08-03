@@ -8,6 +8,13 @@ import (
 	"runtime/debug"
 )
 
+// NewSequenceSlicePipeline creates an Action that processes a slice's elements sequentially.
+// Each element is transformed by the given action one at a time, maintaining the original order.
+//
+// The stopOnError parameter controls error handling behavior:
+// - When true: stops processing immediately on first error, leaving remaining elements unchanged
+// - When false: continues processing all elements even if errors occur
+// Panics always stop execution regardless of the stopOnError setting.
 func NewSequenceSlicePipeline[T any](name string, action Action[T], stopOnError bool) Action[[]T] {
 	return &sequenceSlicePipeline[T]{
 		name:        name,
