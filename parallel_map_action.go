@@ -10,26 +10,26 @@ import (
 	"sync"
 )
 
-// NewParallelMapPipeline creates an Action that processes a map's values in parallel.
+// NewParallelMapAction creates an Action that processes a map's values in parallel.
 // Each value is transformed by the given action concurrently, maintaining the original keys.
 //
 // The pipeline handles panics gracefully, continuing execution of other goroutines
 // when one fails. If any error or panic occurs, the pipeline returns an error
 // but still provides the processed output for successful operations.
-func NewParallelMapPipeline[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
-	return &parallelMapPipeline[K, T]{
+func NewParallelMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
+	return &parallelMapAction[K, T]{
 		name:   name,
 		action: action,
 	}
 }
 
-type parallelMapPipeline[K comparable, T any] struct {
+type parallelMapAction[K comparable, T any] struct {
 	name   string
 	action Action[T]
 }
 
-func (p parallelMapPipeline[K, T]) Name() string { return p.name }
-func (p parallelMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (output map[K]T, err error) {
+func (p parallelMapAction[K, T]) Name() string { return p.name }
+func (p parallelMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output map[K]T, err error) {
 	pCtx := logger.WithRunnerDepth(ctx, p.name)
 	output = make(map[K]T)
 	maps.Copy(output, input)

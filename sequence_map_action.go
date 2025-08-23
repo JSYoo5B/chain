@@ -9,25 +9,25 @@ import (
 	"runtime/debug"
 )
 
-// NewSequenceMapPipeline creates an Action that processes a map's values sequentially.
+// NewSequenceMapAction creates an Action that processes a map's values sequentially.
 // Each value is transformed by the given action one at a time, maintaining the original keys.
 //
 // Unlike parallel processing, sequential execution stops immediately when a panic occurs,
 // leaving unprocessed values unchanged in the output.
-func NewSequenceMapPipeline[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
-	return &sequenceMapPipeline[K, T]{
+func NewSequenceMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
+	return &sequenceMapAction[K, T]{
 		name:   name,
 		action: action,
 	}
 }
 
-type sequenceMapPipeline[K comparable, T any] struct {
+type sequenceMapAction[K comparable, T any] struct {
 	name   string
 	action Action[T]
 }
 
-func (s sequenceMapPipeline[K, T]) Name() string { return s.name }
-func (s sequenceMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (output map[K]T, err error) {
+func (s sequenceMapAction[K, T]) Name() string { return s.name }
+func (s sequenceMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output map[K]T, err error) {
 	pCtx := logger.WithRunnerDepth(ctx, s.name)
 	runnerName, _ := logger.RunnerNameFromContext(pCtx)
 	output = make(map[K]T)

@@ -9,26 +9,26 @@ import (
 	"sync"
 )
 
-// NewParallelSlicePipeline creates an Action that processes a slice's elements in parallel.
+// NewParallelSliceAction creates an Action that processes a slice's elements in parallel.
 // Each element is transformed by the given action concurrently, maintaining the original order.
 //
 // The pipeline handles panics gracefully, continuing execution of other goroutines
 // when one fails. If any error or panic occurs, the pipeline returns an error
 // but still provides the processed output for successful operations.
-func NewParallelSlicePipeline[T any](name string, action Action[T]) Action[[]T] {
-	return &parallelSlicePipeline[T]{
+func NewParallelSliceAction[T any](name string, action Action[T]) Action[[]T] {
+	return &parallelSliceAction[T]{
 		name:   name,
 		action: action,
 	}
 }
 
-type parallelSlicePipeline[T any] struct {
+type parallelSliceAction[T any] struct {
 	name   string
 	action Action[T]
 }
 
-func (p parallelSlicePipeline[T]) Name() string { return p.name }
-func (p parallelSlicePipeline[T]) Run(ctx context.Context, input []T) (output []T, err error) {
+func (p parallelSliceAction[T]) Name() string { return p.name }
+func (p parallelSliceAction[T]) Run(ctx context.Context, input []T) (output []T, err error) {
 	pCtx := logger.WithRunnerDepth(ctx, p.name)
 	output = make([]T, len(input))
 	copy(output, input)

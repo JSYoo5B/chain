@@ -8,29 +8,29 @@ import (
 	"runtime/debug"
 )
 
-// NewSequenceSlicePipeline creates an Action that processes a slice's elements sequentially.
+// NewSequenceSliceAction creates an Action that processes a slice's elements sequentially.
 // Each element is transformed by the given action one at a time, maintaining the original order.
 //
 // The stopOnError parameter controls error handling behavior:
 // - When true: stops processing immediately on first error, leaving remaining elements unchanged
 // - When false: continues processing all elements even if errors occur
 // Panics always stop execution regardless of the stopOnError setting.
-func NewSequenceSlicePipeline[T any](name string, action Action[T], stopOnError bool) Action[[]T] {
-	return &sequenceSlicePipeline[T]{
+func NewSequenceSliceAction[T any](name string, action Action[T], stopOnError bool) Action[[]T] {
+	return &sequenceSliceAction[T]{
 		name:        name,
 		action:      action,
 		stopOnError: stopOnError,
 	}
 }
 
-type sequenceSlicePipeline[T any] struct {
+type sequenceSliceAction[T any] struct {
 	name        string
 	action      Action[T]
 	stopOnError bool
 }
 
-func (s sequenceSlicePipeline[T]) Name() string { return s.name }
-func (s sequenceSlicePipeline[T]) Run(ctx context.Context, input []T) (output []T, err error) {
+func (s sequenceSliceAction[T]) Name() string { return s.name }
+func (s sequenceSliceAction[T]) Run(ctx context.Context, input []T) (output []T, err error) {
 	pCtx := logger.WithRunnerDepth(ctx, s.name)
 	runnerName, _ := logger.RunnerNameFromContext(pCtx)
 	output = make([]T, len(input))
