@@ -2,8 +2,8 @@ package chain
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"maps"
 	"runtime/debug"
@@ -29,6 +29,7 @@ type sequenceMapPipeline[K comparable, T any] struct {
 func (s sequenceMapPipeline[K, T]) Name() string { return s.name }
 func (s sequenceMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (output map[K]T, err error) {
 	pCtx := logger.WithRunnerDepth(ctx, s.name)
+	runnerName, _ := logger.RunnerNameFromContext(pCtx)
 	output = make(map[K]T)
 	maps.Copy(output, input)
 
@@ -38,14 +39,7 @@ func (s sequenceMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (outp
 			logger.Errorf(pCtx, "chain: panic occurred on running, caused by %v", panicErr)
 			debug.PrintStack()
 
-			switch x := panicErr.(type) {
-			case string:
-				err = errors.New(x)
-			case error:
-				err = x
-			default:
-				err = errors.New("unknown panic type")
-			}
+			err = internalErrors.NewPanicError(runnerName, panicErr)
 		}
 	}()
 
@@ -53,6 +47,7 @@ func (s sequenceMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (outp
 		logger.Debugf(pCtx, "chain: running key `%v`", k)
 
 		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%v]/%s", s.name, k, s.action.Name()))
+		runnerName, _ = logger.RunnerNameFromContext(c)
 
 		out, e := s.action.Run(c, in)
 		if e != nil {

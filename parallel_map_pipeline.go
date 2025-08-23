@@ -2,8 +2,8 @@ package chain
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"maps"
 	"runtime/debug"
@@ -37,29 +37,22 @@ func (p parallelMapPipeline[K, T]) Run(ctx context.Context, input map[K]T) (outp
 	wg := sync.WaitGroup{}
 	wg.Add(len(input))
 	runKey := func(k K, in T) {
+		logger.Debugf(pCtx, "chain: running key `%v`", k)
+		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%v]/%s", p.name, k, p.action.Name()))
+		runnerName, _ := logger.RunnerNameFromContext(c)
+
 		// Wrap panic handling for safe running in a pipeline
 		defer func() {
 			if panicErr := recover(); panicErr != nil {
 				logger.Errorf(pCtx, "chain: panic occurred on running key %v, caused by %v", k, panicErr)
 				debug.PrintStack()
 
-				switch x := panicErr.(type) {
-				case string:
-					err = errors.New(x)
-				case error:
-					err = x
-				default:
-					err = errors.New("unknown panic type")
-				}
 				output[k] = in
+				err = internalErrors.NewPanicError(runnerName, panicErr)
 				wg.Done()
 				return
 			}
 		}()
-
-		logger.Debugf(pCtx, "chain: running key `%v`", k)
-
-		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%v]/%s", p.name, k, p.action.Name()))
 
 		out, e := p.action.Run(c, in)
 		if e != nil {

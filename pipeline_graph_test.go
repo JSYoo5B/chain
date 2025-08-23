@@ -8,6 +8,13 @@ import (
 )
 
 func TestPipeline_ValidateGraph(t *testing.T) {
+	newAction := func(name string) Action[int] {
+		return NewSimpleAction(
+			name,
+			func(_ context.Context, _ int) (int, error) { return 0, nil },
+		)
+	}
+
 	type testCase struct {
 		pipeline       func() *Pipeline[int]
 		isCyclic       bool
@@ -17,8 +24,8 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 	testCases := map[string]testCase{
 		"2 node cycle": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
 
 				pipeline := NewPipeline("pipeline", action1, action2)
 				// action1 and action2 makes cycle
@@ -34,9 +41,9 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"3 node cycle": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3)
 				// (action1) -> action2 -> action3
@@ -52,10 +59,10 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"2 separate graph (disconnected)": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
-				action4 := &DirectingAction{name: "action4"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
+				action4 := newAction("action4")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3, action4)
 				// action1 -> action2 | action3 -> action4
@@ -71,9 +78,9 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"valid dag but initAction is not entry node": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
 
 				pipeline := NewPipeline("pipeline", action2, action1, action3)
 				// action1 -> (action2) -> action3
@@ -88,9 +95,9 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"3 node cycle with branches": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3)
 				// (action1) ------------> action3
@@ -107,10 +114,10 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"valid dag but has 2 entry nodes": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
-				action4 := &DirectingAction{name: "action4"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
+				action4 := newAction("action4")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3, action4)
 				// (action1) -> action2 | action3 -> action4
@@ -127,11 +134,11 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"valid dag but has 3 entry nodes": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
-				action4 := &DirectingAction{name: "action4"}
-				action5 := &DirectingAction{name: "action5"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
+				action4 := newAction("action4")
+				action5 := newAction("action5")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3, action4, action5)
 				// (action1) -> action2 | action3 -> action4 <- action5
@@ -149,11 +156,11 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"3 entry nodes, but one is disconnected": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
-				action4 := &DirectingAction{name: "action4"}
-				action5 := &DirectingAction{name: "action5"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
+				action4 := newAction("action4")
+				action5 := newAction("action5")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3, action4, action5)
 				// (action1) -> action2 | action3 -> action4 | action5
@@ -171,9 +178,9 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"valid branching with all directions": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3)
 				// (action1) -> action2
@@ -189,9 +196,9 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"non cycle from initAction, but cycle in disconnected graph": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3)
 				// (action1) | action2 <-> action3
@@ -206,10 +213,10 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 		},
 		"2 cycles": {
 			pipeline: func() *Pipeline[int] {
-				action1 := &DirectingAction{name: "action1"}
-				action2 := &DirectingAction{name: "action2"}
-				action3 := &DirectingAction{name: "action3"}
-				action4 := &DirectingAction{name: "action4"}
+				action1 := newAction("action1")
+				action2 := newAction("action2")
+				action3 := newAction("action3")
+				action4 := newAction("action4")
 
 				pipeline := NewPipeline("pipeline", action1, action2, action3, action4)
 				// (action1) -> action2 -> action3 -> action4
@@ -248,11 +255,4 @@ func TestPipeline_ValidateGraph(t *testing.T) {
 			})
 		})
 	}
-}
-
-type DirectingAction struct{ name string }
-
-func (d DirectingAction) Name() string { return d.name }
-func (d DirectingAction) Run(_ context.Context, _ int) (int, error) {
-	return 0, nil
 }

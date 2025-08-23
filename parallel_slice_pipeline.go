@@ -2,8 +2,8 @@ package chain
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"runtime/debug"
 	"sync"
@@ -36,29 +36,23 @@ func (p parallelSlicePipeline[T]) Run(ctx context.Context, input []T) (output []
 	wg := sync.WaitGroup{}
 	wg.Add(len(input))
 	runIndex := func(i int, in T) {
+		logger.Debugf(pCtx, "chain: running index %d", i)
+
+		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%d]/%s", p.name, i, p.action.Name()))
+		runnerName, _ := logger.RunnerNameFromContext(c)
+
 		// Wrap panic handling for safe running in a pipeline
 		defer func() {
 			if panicErr := recover(); panicErr != nil {
 				logger.Errorf(pCtx, "chain: panic occurred on running index %d, caused by %v", i, panicErr)
 				debug.PrintStack()
 
-				switch x := panicErr.(type) {
-				case string:
-					err = errors.New(x)
-				case error:
-					err = x
-				default:
-					err = errors.New("unknown panic type")
-				}
 				output[i] = in
+				err = internalErrors.NewPanicError(runnerName, panicErr)
 				wg.Done()
 				return
 			}
 		}()
-
-		logger.Debugf(pCtx, "chain: running index %d", i)
-
-		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%d]/%s", p.name, i, p.action.Name()))
 
 		out, e := p.action.Run(c, in)
 		if e != nil {
