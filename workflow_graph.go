@@ -2,18 +2,18 @@ package chain
 
 import "fmt"
 
-// ValidateGraph ensures the pipeline's graph is connected and acyclic.
+// ValidateGraph ensures the workflow's graph is connected and acyclic.
 // It checks for cycles first, then verifies that all nodes connected as a single graph.
-func (p *Pipeline[T]) ValidateGraph() error {
+func (w *Workflow[T]) ValidateGraph() error {
 	// Step 1: Perform DFS from initAction to check for cycles and track visited nodes
 	visited := make(map[Action[T]]int)
-	if err := dfsWithCycleCheck(p.initAction, p.runPlans, visited, []string{}); err != nil {
+	if err := dfsWithCycleCheck(w.initAction, w.runPlans, visited, []string{}); err != nil {
 		return err
 	}
 
 	// Step 2: After DFS, check if all actions have been visited
-	unvisited := make([]Action[T], 0, len(p.runPlans))
-	for action := range p.runPlans {
+	unvisited := make([]Action[T], 0, len(w.runPlans))
+	for action := range w.runPlans {
 		if visited[action] == notVisited {
 			unvisited = append(unvisited, action)
 		}
@@ -23,7 +23,7 @@ func (p *Pipeline[T]) ValidateGraph() error {
 	for len(unvisited) > 0 {
 		newStart := unvisited[0] // Pick any unvisited node
 		visitedFromNewStart := make(map[Action[T]]int)
-		if err := dfsWithCycleCheck(newStart, p.runPlans, visitedFromNewStart, []string{}); err != nil {
+		if err := dfsWithCycleCheck(newStart, w.runPlans, visitedFromNewStart, []string{}); err != nil {
 			return err
 		}
 
@@ -40,11 +40,11 @@ func (p *Pipeline[T]) ValidateGraph() error {
 
 		// Step 5: If no intersection found, it means the graph is disconnected
 		if !intersectionFound {
-			return fmt.Errorf("disconnect detected: action `%s` cannot reach the graph started from initAction `%s`", newStart.Name(), p.initAction.Name())
+			return fmt.Errorf("disconnect detected: action `%s` cannot reach the graph started from initAction `%s`", newStart.Name(), w.initAction.Name())
 		}
 
 		// Step 6: Check all nodes have been visited, no need for further checks
-		if len(visited) == len(p.runPlans) {
+		if len(visited) == len(w.runPlans) {
 			return nil
 		}
 

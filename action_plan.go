@@ -2,20 +2,20 @@ package chain
 
 // ActionPlan represents a map that associates a direction
 // (Success, Error, Abort, and other custom branching directions) with the next Action to execute.
-// It is used to define the flow of actions in a pipeline based on the direction of execution.
+// It is used to define the flow of actions in a Workflow based on the direction of execution.
 type ActionPlan[T any] map[string]Action[T]
 
 const (
 	// Success represents the direction indicating that the action completed successfully
-	// and the pipeline should continue.
+	// and the Workflow should continue.
 	Success = "success"
 	// Error represents the direction indicating that an error occurred,
-	// and the pipeline should handle it accordingly.
+	// and the Workflow should handle it accordingly.
 	Error = "error"
 	// Abort represents the direction indicating that
-	// the pipeline execution should be aborted immediately.
+	// the Workflow execution should be aborted immediately.
 	// This can occur due to a specific Abort condition or
-	// in cases of unexpected errors or panics that cause the pipeline to halt.
+	// in cases of unexpected errors or panics that cause the Workflow to halt.
 	Abort = "abort"
 )
 

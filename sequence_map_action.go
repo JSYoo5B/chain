@@ -33,7 +33,7 @@ func (s sequenceMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output
 	output = make(map[K]T)
 	maps.Copy(output, input)
 
-	// Wrap panic handling for safe running in a pipeline
+	// Wrap panic handling for safe running in a workflow
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			logger.Errorf(pCtx, "chain: panic occurred on running, caused by %v", panicErr)

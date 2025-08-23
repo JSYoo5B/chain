@@ -12,7 +12,7 @@ import (
 // Each element is transformed by the given action one at a time, maintaining the original order.
 //
 // The stopOnError parameter controls error handling behavior:
-// - When true: stops processing immediately on first error, leaving remaining elements unchanged
+// - When true: stops processing immediately on the first error, leaving remaining elements unchanged
 // - When false: continues processing all elements even if errors occur
 // Panics always stop execution regardless of the stopOnError setting.
 func NewSequenceSliceAction[T any](name string, action Action[T], stopOnError bool) Action[[]T] {
@@ -36,7 +36,7 @@ func (s sequenceSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 	output = make([]T, len(input))
 	copy(output, input)
 
-	// Wrap panic handling for safe running in a pipeline
+	// Wrap panic handling for safe running in an action
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			logger.Errorf(pCtx, "chain: panic occurred on running, caused by %v", panicErr)

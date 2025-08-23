@@ -15,7 +15,7 @@ type Action[T any] interface {
 }
 
 // BranchAction is an interface for actions that control branching in the execution flow
-// of a Pipeline. It extends the Action interface and adds methods for handling conditional
+// of a Workflow. It extends the Action interface and adds methods for handling conditional
 // branching based on the execution results.
 type BranchAction[T any] interface {
 	// Name returns the name of the BranchAction.
@@ -26,7 +26,7 @@ type BranchAction[T any] interface {
 	// returns an error if the action cannot be executed successfully.
 	Run(ctx context.Context, input T) (output T, err error)
 
-	// Directions returns a list of possible directions that the pipeline can take.
+	// Directions return a list of possible directions that the Workflow can take.
 	// These directions are used for validation and must include all possible values that
 	// NextDirection can return.
 	Directions() []string
@@ -37,7 +37,7 @@ type BranchAction[T any] interface {
 	NextDirection(ctx context.Context, output T) (direction string, err error)
 }
 
-// Terminate explicitly ends execution in a Pipeline by returning nil.
+// Terminate explicitly ends execution in a Workflow by returning nil.
 // It signals that no further actions will be executed.
 //
 // Use in ActionPlan to clearly indicate termination intent.

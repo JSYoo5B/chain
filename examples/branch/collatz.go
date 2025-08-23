@@ -5,34 +5,34 @@ import (
 	"github.com/JSYoo5B/chain"
 )
 
-func basicCollatzFunction() *chain.Pipeline[int] {
+func basicCollatzFunction() *chain.Workflow[int] {
 	branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
-	pipeline := chain.NewPipeline("SimpleCollatz", branch, even, odd1, odd2)
-	pipeline.SetRunPlan(branch, chain.ActionPlan[int]{
+	workflow := chain.NewWorkflow("SimpleCollatz", branch, even, odd1, odd2)
+	workflow.SetRunPlan(branch, chain.ActionPlan[int]{
 		"even": even,
 		"odd":  odd1,
 	})
-	pipeline.SetRunPlan(even, chain.TerminationPlan[int]())
-	pipeline.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
-	pipeline.SetRunPlan(odd2, chain.TerminationPlan[int]())
+	workflow.SetRunPlan(even, chain.TerminationPlan[int]())
+	workflow.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
+	workflow.SetRunPlan(odd2, chain.TerminationPlan[int]())
 
-	return pipeline
+	return workflow
 }
 
-func shortcutCollatzFunction() *chain.Pipeline[int] {
+func shortcutCollatzFunction() *chain.Workflow[int] {
 	branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
-	pipeline := chain.NewPipeline("ShortcutCollatz", branch, even, odd1, odd2)
-	pipeline.SetRunPlan(branch, chain.ActionPlan[int]{
+	workflow := chain.NewWorkflow("ShortcutCollatz", branch, even, odd1, odd2)
+	workflow.SetRunPlan(branch, chain.ActionPlan[int]{
 		"even": even,
 		"odd":  odd1,
 	})
-	pipeline.SetRunPlan(even, chain.TerminationPlan[int]())
-	pipeline.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
-	pipeline.SetRunPlan(odd2, chain.SuccessOnlyPlan(even))
+	workflow.SetRunPlan(even, chain.TerminationPlan[int]())
+	workflow.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
+	workflow.SetRunPlan(odd2, chain.SuccessOnlyPlan(even))
 
-	return pipeline
+	return workflow
 }
 
 func checkNext() chain.Action[int] {

@@ -11,8 +11,8 @@ import (
 func TestTypeAdapterActions(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
-	t.Run("simple type adapting pipeline", func(t *testing.T) {
-		adapterPipeline := chain.NewPipeline(
+	t.Run("simple type adapting workflow", func(t *testing.T) {
+		adaptedWorkflow := chain.NewWorkflow(
 			"ActionAdapterTest",
 			numberToPair(newIncAction("action1")),
 			messageToPair(newAppendAction("action2")),
@@ -23,25 +23,25 @@ func TestTypeAdapterActions(t *testing.T) {
 
 		input := Pair{number: 10, message: "f"}
 		// {10, f} -> {11, f} -> {11, fo} -> {12, fo} -> {13, fo} -> {13, foo}
-		output, err := adapterPipeline.Run(context.Background(), input)
+		output, err := adaptedWorkflow.Run(context.Background(), input)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 13, output.number)
 		assert.Equal(t, "foo", output.message)
 	})
 
-	t.Run("nested pipeline adapting pipeline", func(t *testing.T) {
-		inc2Action := chain.NewPipeline(
+	t.Run("different workflows adapted in workflow", func(t *testing.T) {
+		inc2Action := chain.NewWorkflow(
 			"Inc2Action",
 			newIncAction("inc1"),
 			newIncAction("inc2"),
 		)
-		append2Action := chain.NewPipeline(
+		append2Action := chain.NewWorkflow(
 			"Append2Action",
 			newAppendAction("append1"),
 			newAppendAction("append2"),
 		)
-		inc5Action := chain.NewPipeline(
+		inc5Action := chain.NewWorkflow(
 			"Inc5Action",
 			newIncAction("inc3"),
 			newIncAction("inc4"),
@@ -50,8 +50,8 @@ func TestTypeAdapterActions(t *testing.T) {
 			newIncAction("inc7"),
 		)
 
-		adapter := chain.NewPipeline(
-			"PipelineAdapterTest",
+		adapter := chain.NewWorkflow(
+			"WorkflowAdapterTest",
 			numberToPair(inc2Action),
 			messageToPair(append2Action),
 			numberToPair(inc5Action),

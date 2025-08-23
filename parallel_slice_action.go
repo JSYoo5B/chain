@@ -12,8 +12,8 @@ import (
 // NewParallelSliceAction creates an Action that processes a slice's elements in parallel.
 // Each element is transformed by the given action concurrently, maintaining the original order.
 //
-// The pipeline handles panics gracefully, continuing execution of other goroutines
-// when one fails. If any error or panic occurs, the pipeline returns an error
+// The action handles panics gracefully, continuing execution of other goroutines
+// when one fails. If any error or panic occurs, the action returns an error
 // but still provides the processed output for successful operations.
 func NewParallelSliceAction[T any](name string, action Action[T]) Action[[]T] {
 	return &parallelSliceAction[T]{
@@ -41,7 +41,7 @@ func (p parallelSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%d]/%s", p.name, i, p.action.Name()))
 		runnerName, _ := logger.RunnerNameFromContext(c)
 
-		// Wrap panic handling for safe running in a pipeline
+		// Wrap panic handling for safe running in an action
 		defer func() {
 			if panicErr := recover(); panicErr != nil {
 				logger.Errorf(pCtx, "chain: panic occurred on running index %d, caused by %v", i, panicErr)

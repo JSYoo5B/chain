@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestBranchingPipeline(t *testing.T) {
+func TestBranchingWorkflow(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	ctx := context.Background()
