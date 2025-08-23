@@ -88,12 +88,12 @@ func (w *Workflow[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 		panic(fmt.Errorf("`%s` is not a member of this workflow", currentAction.Name()))
 	}
 
-	// When given plan is nil, make currentAction to terminate on any cases
+	// When the given plan is nil, make currentAction to terminate on any cases
 	if plan == nil {
 		plan = ActionPlan[T]{}
 	}
 
-	// Set next action to terminate when allowed directions were not specified in plan
+	// Set the next action to terminate when allowed directions were not specified in the plan
 	terminate := Terminate[T]()
 	availableDirections := []string{Success, Error, Abort}
 	if branchAction, isBranchAction := currentAction.(BranchAction[T]); isBranchAction {

@@ -3,7 +3,7 @@ package chain
 import "fmt"
 
 // ValidateGraph ensures the workflow's graph is connected and acyclic.
-// It checks for cycles first, then verifies that all nodes connected as a single graph.
+// It checks for cycles first, then verifies that all nodes are connected as a single graph.
 func (w *Workflow[T]) ValidateGraph() error {
 	// Step 1: Perform DFS from initAction to check for cycles and track visited nodes
 	visited := make(map[Action[T]]int)

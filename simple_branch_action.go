@@ -3,7 +3,7 @@ package chain
 import "context"
 
 // BranchFunc represents the signature for the function that defines the branching logic
-// for a BranchAction in the package. It takes the running context and output as input,
+// for a BranchAction in the package. It takes the running context and output as input
 // and returns the direction for the next step in the process along with any potential error.
 type BranchFunc[T any] func(ctx context.Context, output T) (direction string, err error)
 
