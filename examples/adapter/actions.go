@@ -1,4 +1,4 @@
-package aggregate
+package adapter
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func numberToPair(action chain.Action[int]) chain.Action[Pair] {
 		c.number = i
 		return c
 	}
-	return chain.NewAggregateAction(action, getter, setter)
+	return chain.NewTypeAdapterAction(action, getter, setter)
 }
 
 func messageToPair(action chain.Action[string]) chain.Action[Pair] {
@@ -49,5 +49,5 @@ func messageToPair(action chain.Action[string]) chain.Action[Pair] {
 		c.message = s
 		return c
 	}
-	return chain.NewAggregateAction(action, getter, setter)
+	return chain.NewTypeAdapterAction(action, getter, setter)
 }

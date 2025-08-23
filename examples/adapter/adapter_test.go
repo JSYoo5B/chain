@@ -1,4 +1,4 @@
-package aggregate
+package adapter
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"testing"
 )
 
-func TestAggregatePipeline(t *testing.T) {
+func TestTypeAdapterActions(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
-	t.Run("simple aggregate pipeline", func(t *testing.T) {
-		aggregatePipeline := chain.NewPipeline(
-			"ActionAggregateTest",
+	t.Run("simple type adapting pipeline", func(t *testing.T) {
+		adapterPipeline := chain.NewPipeline(
+			"ActionAdapterTest",
 			numberToPair(newIncAction("action1")),
 			messageToPair(newAppendAction("action2")),
 			numberToPair(newIncAction("action3")),
@@ -23,14 +23,14 @@ func TestAggregatePipeline(t *testing.T) {
 
 		input := Pair{number: 10, message: "f"}
 		// {10, f} -> {11, f} -> {11, fo} -> {12, fo} -> {13, fo} -> {13, foo}
-		output, err := aggregatePipeline.Run(context.Background(), input)
+		output, err := adapterPipeline.Run(context.Background(), input)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 13, output.number)
 		assert.Equal(t, "foo", output.message)
 	})
 
-	t.Run("nested pipeline aggregate pipeline", func(t *testing.T) {
+	t.Run("nested pipeline adapting pipeline", func(t *testing.T) {
 		inc2Action := chain.NewPipeline(
 			"Inc2Action",
 			newIncAction("inc1"),
@@ -50,8 +50,8 @@ func TestAggregatePipeline(t *testing.T) {
 			newIncAction("inc7"),
 		)
 
-		aggregatePipeline := chain.NewPipeline(
-			"PipelineAggregateTest",
+		adapter := chain.NewPipeline(
+			"PipelineAdapterTest",
 			numberToPair(inc2Action),
 			messageToPair(append2Action),
 			numberToPair(inc5Action),
@@ -61,7 +61,7 @@ func TestAggregatePipeline(t *testing.T) {
 		// {10, f} -> {11, f} -> {12, f}
 		// -> {12, fo} -> {12, foo}
 		// -> {13, foo} -> {14, foo} -> {15, foo} -> {16, foo} -> {17, foo}
-		output, err := aggregatePipeline.Run(context.Background(), input)
+		output, err := adapter.Run(context.Background(), input)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 17, output.number)
