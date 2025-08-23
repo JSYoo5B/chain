@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"runtime/debug"
 )
@@ -90,29 +91,26 @@ func selectNextAction[T any](plan ActionPlan[T], currentAction Action[T], direct
 }
 
 func runAction[T any](action Action[T], ctx context.Context, input T) (output T, direction string, runError error) {
+	ctx = logger.WithRunnerDepth(ctx, action.Name())
+	runnerName, _ := logger.RunnerNameFromContext(ctx)
+
 	// Wrap panic handling for safe running in a pipeline
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			logger.Errorf(ctx, "chain: panic occurred on running, caused by %v", panicErr)
 			debug.PrintStack()
-
-			output = input
-			direction = Abort
-			switch x := panicErr.(type) {
-			case string:
-				runError = errors.New(x)
-			case error:
-				runError = x
-			default:
-				runError = errors.New("unknown panic type")
-			}
+			output, direction = input, Abort
+			runError = internalErrors.NewPanicError(runnerName, panicErr)
 		}
 	}()
 
-	ctx = logger.WithRunnerDepth(ctx, action.Name())
-
 	output, runError = action.Run(ctx, input)
 	if runError != nil {
+		var panicError *internalErrors.PanicError
+		if errors.As(runError, &panicError) {
+			return output, Abort, runError
+		}
+
 		return output, Error, runError
 	}
 	direction = Success
