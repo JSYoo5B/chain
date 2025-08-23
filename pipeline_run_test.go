@@ -77,3 +77,58 @@ func TestRecoverOnRun(t *testing.T) {
 		})
 	}
 }
+
+func TestPanicPropagation(t *testing.T) {
+	logrus.SetLevel(logrus.DebugLevel)
+
+	newIncrementor := func() Action[int] {
+		return NewSimpleAction(
+			"increment",
+			func(_ context.Context, input int) (int, error) { return input + 1, nil },
+		)
+	}
+	panicker := NewSimpleAction(
+		"panicker",
+		func(_ context.Context, input int) (int, error) { panic("test") },
+	)
+
+	level1 := NewPipeline(
+		"level1",
+		newIncrementor(), panicker, newIncrementor())
+	level2 := NewPipeline(
+		"level2",
+		newIncrementor(), level1, newIncrementor())
+	level3 := NewPipeline(
+		"level3",
+		newIncrementor(), level2, newIncrementor())
+
+	type testCase struct {
+		actionToRun Action[int]
+		expected    int
+	}
+	testCases := map[string]testCase{
+		"internal pipeline aborts": {
+			actionToRun: level1,
+			expected:    1,
+		},
+		"level2 pipeline aborts by level1": {
+			actionToRun: level2,
+			expected:    2,
+		},
+		"triple depth pipeline aborts by level1": {
+			actionToRun: level3,
+			expected:    3,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				result, err := tc.actionToRun.Run(context.Background(), 0)
+
+				assert.Error(t, err)
+				assert.Equal(t, tc.expected, result)
+			})
+		})
+	}
+}
