@@ -32,8 +32,8 @@ func TestRecoverOnRun(t *testing.T) {
 		"recover from action": {
 			func(t *testing.T) func() {
 				return func() {
-					pipeline := NewPipeline("Calculation", divide("1"))
-					_, err := pipeline.Run(ctx, 0)
+					workflow := NewWorkflow("Calculation", divide("1"))
+					_, err := workflow.Run(ctx, 0)
 
 					assert.Error(t, err)
 					assert.Contains(t, err.Error(), "divide by zero")
@@ -42,26 +42,26 @@ func TestRecoverOnRun(t *testing.T) {
 		"skip actions after recover": {
 			func(t *testing.T) func() {
 				return func() {
-					pipeline := NewPipeline("Calculation", divide("1"), setTen("2"))
-					output, err := pipeline.Run(ctx, 0)
+					workflow := NewWorkflow("Calculation", divide("1"), setTen("2"))
+					output, err := workflow.Run(ctx, 0)
 
 					assert.Error(t, err)
 					assert.Contains(t, err.Error(), "divide by zero")
 					assert.NotEqual(t, 10, output)
 				}
 			}},
-		"internal pipeline panic recovers": {
+		"internal workflow panic recovers": {
 			func(t *testing.T) func() {
 				return func() {
-					subPipeline := NewPipeline("SubPipeline", divide(".1"), setTen(".2"))
-					pipeline := NewPipeline(
-						"SuperPipeline",
+					subWorkFlow := NewWorkflow("SubWorkflow", divide(".1"), setTen(".2"))
+					superWorkflow := NewWorkflow(
+						"SuperWorkflow",
 						setTen("1"),
 						divide("2"),
-						subPipeline,
+						subWorkFlow,
 						setTen("4"),
 					)
-					output, err := pipeline.Run(ctx, 0)
+					output, err := superWorkflow.Run(ctx, 0)
 
 					assert.Error(t, err)
 					assert.Contains(t, err.Error(), "divide by zero")
@@ -92,13 +92,13 @@ func TestPanicPropagation(t *testing.T) {
 		func(_ context.Context, input int) (int, error) { panic("test") },
 	)
 
-	level1 := NewPipeline(
+	level1 := NewWorkflow(
 		"level1",
 		newIncrementor(), panicker, newIncrementor())
-	level2 := NewPipeline(
+	level2 := NewWorkflow(
 		"level2",
 		newIncrementor(), level1, newIncrementor())
-	level3 := NewPipeline(
+	level3 := NewWorkflow(
 		"level3",
 		newIncrementor(), level2, newIncrementor())
 
@@ -107,15 +107,15 @@ func TestPanicPropagation(t *testing.T) {
 		expected    int
 	}
 	testCases := map[string]testCase{
-		"internal pipeline aborts": {
+		"internal workflow aborts": {
 			actionToRun: level1,
 			expected:    1,
 		},
-		"level2 pipeline aborts by level1": {
+		"level2 workflow aborts by level1": {
 			actionToRun: level2,
 			expected:    2,
 		},
-		"triple depth pipeline aborts by level1": {
+		"triple depth workflow aborts by level1": {
 			actionToRun: level3,
 			expected:    3,
 		},

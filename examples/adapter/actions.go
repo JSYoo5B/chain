@@ -1,4 +1,4 @@
-package aggregate
+package adapter
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 )
 
 // The following functions create two types of actions, Action[int] and Action[string],
-// where the generic types are different, making it impossible to handle them within a single pipeline.
+// where the generic types are different, making it impossible to handle them within a single workflow.
 
 func newIncAction(name string) chain.Action[int] {
 	runFunc := func(ctx context.Context, input int) (output int, err error) {
@@ -27,7 +27,7 @@ func newAppendAction(name string) chain.Action[string] {
 
 // By aggregating int and string into a single `Pair` struct,
 // new actions are defined for `Action[Pair]` which combine each `Action[int]` and `Action[string]`.
-// This enables handling different types of actions within a single pipeline.
+// This enables handling different types of actions within a single workflow.
 
 type Pair struct {
 	number  int
@@ -40,7 +40,7 @@ func numberToPair(action chain.Action[int]) chain.Action[Pair] {
 		c.number = i
 		return c
 	}
-	return chain.NewAggregateAction(action, getter, setter)
+	return chain.NewTypeAdapterAction(action, getter, setter)
 }
 
 func messageToPair(action chain.Action[string]) chain.Action[Pair] {
@@ -49,5 +49,5 @@ func messageToPair(action chain.Action[string]) chain.Action[Pair] {
 		c.message = s
 		return c
 	}
-	return chain.NewAggregateAction(action, getter, setter)
+	return chain.NewTypeAdapterAction(action, getter, setter)
 }

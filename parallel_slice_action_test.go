@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestSequenceMapPipeline(t *testing.T) {
+func TestParallelSliceAction(t *testing.T) {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	double := NewSimpleAction(
@@ -34,39 +34,34 @@ func TestSequenceMapPipeline(t *testing.T) {
 			return 10 / input, nil
 		})
 
-	t.Run("simple iteration", func(t *testing.T) {
-		doubles := NewSequenceMapPipeline[string, int]("MapDouble", double)
-		input := map[string]int{"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
-		expected := map[string]int{"one": 2, "two": 4, "three": 6, "four": 8, "five": 10}
+	t.Run("simple parallel iteration", func(t *testing.T) {
+		doubles := NewParallelSliceAction("MapDouble", double)
+		input := []int{1, 2, 3, 4, 5}
+		expected := []int{2, 4, 6, 8, 10}
 
 		output, err := doubles.Run(context.Background(), input)
 
 		assert.NoError(t, err)
 		assert.Equal(t, expected, output)
 	})
-	t.Run("error in iteration continues", func(t *testing.T) {
-		doubles := NewSequenceMapPipeline[string, int]("MapDoubleStop", positiveDouble)
-		input := map[string]int{"one": 1, "two": 2, "minus": -1, "four": 4, "five": 5}
-		expected := map[string]int{"one": 2, "two": 4, "minus": 0, "four": 8, "five": 10}
+	t.Run("error in parallel iteration continues", func(t *testing.T) {
+		doubles := NewParallelSliceAction("MapDoubleContinue", positiveDouble)
+		input := []int{1, 2, -1, 4, 5}
+		expected := []int{2, 4, 0, 8, 10}
 
 		output, err := doubles.Run(context.Background(), input)
 
 		assert.Error(t, err)
 		assert.Equal(t, expected, output)
 	})
-	t.Run("panic in iteration", func(t *testing.T) {
-		divides := NewSequenceMapPipeline[string, int]("MapDivide10", divide10)
-		input := map[string]int{"ten": 10, "five": 5, "two": 2, "zero": 0, "one": 1}
-		expected := map[string]int{"ten": 1, "five": 2, "two": 5, "zero": 0, "one": 10}
+	t.Run("panic in parallel iteration", func(t *testing.T) {
+		divides := NewParallelSliceAction("MapDivide10", divide10)
+		input := []int{10, 5, 2, 0, 1}
+		expected := []int{1, 2, 5, 0, 10}
 
 		output, err := divides.Run(context.Background(), input)
 
 		assert.Error(t, err)
-		assert.Equal(t, len(input), len(output))
-		for k := range output {
-			_, exist := output[k]
-			assert.True(t, exist)
-			assert.True(t, output[k] == expected[k] || output[k] == input[k])
-		}
+		assert.Equal(t, expected, output)
 	})
 }

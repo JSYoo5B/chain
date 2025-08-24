@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestPipeline_Configure(t *testing.T) {
+func TestWorkflow_Configure(t *testing.T) {
 	newAction := func(name string) Action[string] {
 		return NewSimpleAction(
 			name,
@@ -25,23 +25,23 @@ func TestPipeline_Configure(t *testing.T) {
 	testCases := map[string]testCase{
 		"creating without name": {
 			code: func() {
-				NewPipeline[string]("")
+				NewWorkflow[string]("")
 			},
 			panics:  true,
-			message: "pipeline must have a name",
+			message: "workflow must have a name",
 		},
 		"creating without action": {
 			code: func() {
-				NewPipeline[string]("Pipeline")
+				NewWorkflow[string]("Workflow")
 			},
 			panics:  true,
-			message: "no actions were described for creating pipeline",
+			message: "no actions were described for creating workflow",
 		},
 		"creating with terminate": {
 			code: func() {
 				action1 := newAction("action")
 
-				NewPipeline("Pipeline", action1, terminate)
+				NewWorkflow("Workflow", action1, terminate)
 			},
 			panics:  true,
 			message: "do not set terminate as a member",
@@ -50,7 +50,7 @@ func TestPipeline_Configure(t *testing.T) {
 			code: func() {
 				action1 := newAction("action")
 
-				NewPipeline("Pipeline", action1, action1)
+				NewWorkflow("Workflow", action1, action1)
 			},
 			panics:  true,
 			message: "duplicate action specified on actions argument 2",
@@ -58,9 +58,9 @@ func TestPipeline_Configure(t *testing.T) {
 		"set action plan for terminate": {
 			code: func() {
 				action1 := newAction("action")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				pipeline.SetRunPlan(terminate, terminationPlan)
+				workflow.SetRunPlan(terminate, terminationPlan)
 			},
 			panics:  true,
 			message: "cannot set plan for terminate",
@@ -68,9 +68,9 @@ func TestPipeline_Configure(t *testing.T) {
 		"set action plan for unsupported direction": {
 			code: func() {
 				action1, action2 := newAction("action1"), newAction("action2")
-				pipeline := NewPipeline("Pipeline", action1, action2)
+				workflow := NewWorkflow("Workflow", action1, action2)
 
-				pipeline.SetRunPlan(action1, ActionPlan[string]{
+				workflow.SetRunPlan(action1, ActionPlan[string]{
 					"unsupported": action2,
 				})
 			},
@@ -80,19 +80,19 @@ func TestPipeline_Configure(t *testing.T) {
 		"set action plan for non-member": {
 			code: func() {
 				action1, nonMember := newAction("member"), newAction("non-member")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				pipeline.SetRunPlan(nonMember, SuccessOnlyPlan(action1))
+				workflow.SetRunPlan(nonMember, SuccessOnlyPlan(action1))
 			},
 			panics:  true,
-			message: "`non-member` is not a member of this pipeline",
+			message: "`non-member` is not a member of this workflow",
 		},
 		"set action plan directing non-member": {
 			code: func() {
 				action1, nonMember := newAction("member"), newAction("non-member")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				pipeline.SetRunPlan(action1, SuccessOnlyPlan(nonMember))
+				workflow.SetRunPlan(action1, SuccessOnlyPlan(nonMember))
 			},
 			panics:  true,
 			message: "setting plan from `member` directing `success` to non-member `non-member`",
@@ -100,9 +100,9 @@ func TestPipeline_Configure(t *testing.T) {
 		"set action plan with self loop": {
 			code: func() {
 				action1 := newAction("member")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				pipeline.SetRunPlan(action1, SuccessOnlyPlan(action1))
+				workflow.SetRunPlan(action1, SuccessOnlyPlan(action1))
 			},
 			panics:  true,
 			message: "setting self loop plan with `member` directing `success`",
@@ -110,18 +110,18 @@ func TestPipeline_Configure(t *testing.T) {
 		"not configuring manual plans": {
 			code: func() {
 				action1 := newAction("action")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				_ = pipeline
+				_ = workflow
 			},
 			panics: false,
 		},
 		"skipping some default directions": {
 			code: func() {
 				action1 := newAction("action")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				pipeline.SetRunPlan(action1, ActionPlan[string]{
+				workflow.SetRunPlan(action1, ActionPlan[string]{
 					Success: terminate,
 					// Not configuring Error, Abort
 				})
@@ -131,9 +131,9 @@ func TestPipeline_Configure(t *testing.T) {
 		"skipping plan description": {
 			code: func() {
 				action1 := newAction("action")
-				pipeline := NewPipeline("Pipeline", action1)
+				workflow := NewWorkflow("Workflow", action1)
 
-				pipeline.SetRunPlan(action1, terminationPlan) // terminationPlan is nil
+				workflow.SetRunPlan(action1, terminationPlan) // terminationPlan is nil
 			},
 			panics: false,
 		},

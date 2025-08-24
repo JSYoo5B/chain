@@ -9,33 +9,33 @@ import (
 	"runtime/debug"
 )
 
-// Run executes the Pipeline by running Actions in the order they were configured,
+// Run executes the Workflow by running Actions in the order they were configured,
 // starting from the initAction, which is the first one of the memberActions provided
-// by the constructor such as NewPipeline.
+// by the constructor such as NewWorkflow.
 // The actions are executed in order, passing the output of one action as input to the next.
-func (p *Pipeline[T]) Run(ctx context.Context, input T) (output T, err error) {
-	if len(p.runPlans) == 1 {
-		output, _, err = runAction(p.initAction, ctx, input)
+func (w *Workflow[T]) Run(ctx context.Context, input T) (output T, err error) {
+	if len(w.runPlans) == 1 {
+		output, _, err = runAction(w.initAction, ctx, input)
 		return output, err
 	}
 
-	return p.RunAt(p.initAction, ctx, input)
+	return w.RunAt(w.initAction, ctx, input)
 }
 
-// RunAt starts the execution of the pipeline from a given Action (initAction).
+// RunAt starts the execution of the Workflow from a given Action (initAction).
 // It follows the action plan, executing actions sequentially based on the specified directions.
-// If an action returns an error, the pipeline will proceed to the next action according to
+// If an action returns an error, the Workflow will proceed to the next action according to
 // the defined plan, potentially directing the flow to an action mapped for the Error direction.
-// The Abort direction, when encountered, will immediately halt the pipeline execution unless
+// The Abort direction, when encountered, will immediately halt the Workflow execution unless
 // the plan specifies otherwise.
 // If no action plan is found for a given direction,
-// the pipeline will terminate with the appropriate error.
-func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, lastErr error) {
-	if !isMemberActionInPipeline(initAction, p) {
+// the Workflow will terminate with the appropriate error.
+func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, lastErr error) {
+	if !isMemberActionInWorkflow(initAction, w) {
 		return input, errors.New("given initAction is not registered on constructor")
 	}
 
-	ctx = logger.WithRunnerDepth(ctx, p.name)
+	ctx = logger.WithRunnerDepth(ctx, w.name)
 
 	var (
 		terminate     = Terminate[T]()
@@ -49,7 +49,7 @@ func (p *Pipeline[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 	for currentAction = initAction; currentAction != nil; currentAction = nextAction {
 		output, direction, runErr = runAction(currentAction, ctx, input)
 
-		nextAction, selectErr = selectNextAction(p.runPlans[currentAction], currentAction, direction)
+		nextAction, selectErr = selectNextAction(w.runPlans[currentAction], currentAction, direction)
 		if selectErr != nil {
 			logger.Error(ctx, selectErr)
 			direction = Abort
@@ -94,7 +94,7 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 	ctx = logger.WithRunnerDepth(ctx, action.Name())
 	runnerName, _ := logger.RunnerNameFromContext(ctx)
 
-	// Wrap panic handling for safe running in a pipeline
+	// Wrap panic handling for safe running in a Workflow
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			logger.Errorf(ctx, "chain: panic occurred on running, caused by %v", panicErr)

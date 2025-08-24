@@ -2,11 +2,11 @@
 
 Full test code available: [collatz.go](collatz.go)
 
-Chain `Pipeline`s support branching logic, enabling conditional execution paths where subsequent `Action`s depend on prior results. This feature is particularly useful for problems where outcomes vary based on specific conditions.
+Chain `Workflow`s support branching logic, enabling conditional execution paths where subsequent `Action`s depend on prior results. This feature is particularly useful for problems where outcomes vary based on specific conditions.
 
-This document illustrates how to implement a branching pipeline using the Collatz Conjecture as an example. The pipeline processes an integer input, deciding the next step based on whether the number is odd or even.
+This document illustrates how to implement a branching workflow using the Collatz Conjecture as an example. The workflow processes an integer input, deciding the next step based on whether the number is odd or even.
 
-## Collatz Conjecture to Pipeline
+## Collatz Conjecture to Workflow
 
 The Collatz Conjecture is defined mathematically as:
 
@@ -52,9 +52,9 @@ func inc() chain.Action[int] {
 
 ```
 
-### Pipeline Implementation
+### Workflow Implementation
 
-The pipeline executes according to the following graph:
+The workflow executes according to the following graph:
 
 ```mermaid
 graph LR;
@@ -79,22 +79,22 @@ graph LR;
     odd2 --> terminate2
 ```
 
-Here is the implementation for a basic Collatz Pipeline:
+Here is the implementation for a basic Collatz Workflow:
 
 ```go
-func basicCollatzFunction() *chain.Pipeline[int] {
+func basicCollatzFunction() *chain.Workflow[int] {
     branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
-    pipeline := chain.NewPipeline("SimpleCollatz", branch, even, odd1, odd2)
-    pipeline.SetRunPlan(branch, chain.ActionPlan[int]{
+    workflow := chain.NewWorkflow("SimpleCollatz", branch, even, odd1, odd2)
+    workflow.SetRunPlan(branch, chain.ActionPlan[int]{
         "even": even,
         "odd":  odd1,
     })
-    pipeline.SetRunPlan(even, chain.TerminationPlan[int]())
-    pipeline.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
-    pipeline.SetRunPlan(odd2, chain.TerminationPlan[int]())
+    workflow.SetRunPlan(even, chain.TerminationPlan[int]())
+    workflow.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
+    workflow.SetRunPlan(odd2, chain.TerminationPlan[int]())
 
-    return pipeline
+    return workflow
 }
 ```
 
@@ -117,7 +117,7 @@ level=debug msg="chain: `CheckNext` directs `even`, selecting `Half`" runnerName
 level=debug msg="chain: `Half` directs `success`, selecting `termination`" runnerName=SimpleCollatz
 ```
 
-## Shortcut form of the Collatz Conjecture to Pipeline
+## Shortcut form of the Collatz Conjecture to Workflow
 
 The odd-number case in the Collatz sequence ultimately transitions into an even number. Combining these two steps simplifies the process:
 
@@ -126,7 +126,7 @@ f(n) = \begin{cases} n/2 &\text{if } n \equiv 0 \pmod{2},\\
 \frac{3n+1}{2} & \text{if } n\equiv 1 \pmod{2} .\end{cases}
 $$
 
-### Pipeline Implementation
+### Workflow Implementation
 
 The revised flow is shown below:
 
@@ -152,22 +152,22 @@ graph LR;
     odd2 --> even
 ```
 
-Here’s the corresponding pipeline implementation:
+Here’s the corresponding Workflow implementation:
 
 ```go
-func shortcutCollatzFunction() *chain.Pipeline[int] {
+func shortcutCollatzFunction() *chain.Workflow[int] {
     branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
-    pipeline := chain.NewPipeline("ShortcutCollatz", branch, even, odd1, odd2)
-    pipeline.SetRunPlan(branch, chain.ActionPlan[int]{
+    workflow := chain.NewWorkflow("ShortcutCollatz", branch, even, odd1, odd2)
+    workflow.SetRunPlan(branch, chain.ActionPlan[int]{
         "even": even,
         "odd":  odd1,
     })
-    pipeline.SetRunPlan(even, chain.TerminationPlan[int]())
-    pipeline.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
-    pipeline.SetRunPlan(odd2, chain.SuccessOnlyPlan(even))
+    workflow.SetRunPlan(even, chain.TerminationPlan[int]())
+    workflow.SetRunPlan(odd1, chain.SuccessOnlyPlan(odd2))
+    workflow.SetRunPlan(odd2, chain.SuccessOnlyPlan(even))
 
-    return pipeline
+    return workflow
 }
 ```
 

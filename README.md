@@ -1,23 +1,23 @@
-# Chain: A Flexible Action-Pipeline Library
+# Chain: A Flexible Action-Workflow Library
 
-The chain package provides a flexible framework for building and executing sequential workflows (pipelines) of actions. It allows you to define a series of steps, each represented by an Action, which processes inputs and produces outputs. The package supports conditional branching, customizable execution paths, and error handling, enabling complex workflows with minimal boilerplate.
+The chain package provides a flexible framework for building and executing sequential workflows of actions. It allows you to define a series of steps, each represented by an Action, which processes inputs and produces outputs. The package supports conditional branching, customizable execution paths, and error handling, enabling complex workflows with minimal boilerplate.
 
 ## Features
 
-- Action and Pipeline Composition  
-  Create modular, reusable units of work (`Action`) and orchestrate them into robust workflows using `Pipeline`.
+- Action and Workflow Composition  
+  Create modular, reusable units of work (`Action`) and orchestrate them into robust workflows using `Workflow`.
 
 - DAG-based Execution Plans  
   Ensure predictable execution and robust validation with built-in cycle detection to enforce acyclic workflows.
 
-- Nested Pipelines  
-  Use pipelines as actions within other pipelines, enabling modular and hierarchical workflow designs.
+- Nested Workflows  
+  Use Workflows as actions within other Workflows, enabling modular and hierarchical workflow designs.
 
 - Conditional Branching  
   Support for `Success`, `Failure`, `Abort` and custom direction-based branching within your execution flows.
 
 - AggregateAction Support  
-  Simplify the orchestration of complex workflows by combining `Action`s or `Pipeline`s of different types into a unified control flow using AggregateAction.
+  Simplify the orchestration of complex workflows by combining `Action`s or `Workflow`s of different types into a unified control flow using AggregateAction.
 
 ## Getting Started
 
@@ -33,7 +33,7 @@ go get github.com/JSYoo5B/chain
 
 #### Action
 
-An `Action` represents a single task in the pipeline. Each action can process input data and return output or an error.
+An `Action` represents a single task in the `Workflow`. Each action can process input data and return output or an error.
 
 ```go
 type Action[T any] interface {
@@ -55,13 +55,13 @@ type BranchAction[T any] interface {
 }
 ```
 
-#### Pipeline
+#### Workflow
 
-A `Pipeline` is a sequence of `Action`s executed in order. It orchestrates the flow of data between actions and handles branching, success, error, and abort conditions.
+A `Workflow` is a sequence of `Action`s executed in order. It orchestrates the flow of data between actions and handles branching, success, error, and abort conditions.
 
 #### ActionPlan
 
-An `ActionPlan` is a map that associates a direction (e.g., success, error, abort) with the next Action to execute, defining the flow of a pipeline.
+An `ActionPlan` is a map that associates a direction (e.g., success, error, abort) with the next Action to execute, defining the flow of a Workflow.
 
 ```go
 type ActionPlan[T any] map[string]Action[T]
