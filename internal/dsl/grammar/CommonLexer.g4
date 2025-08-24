@@ -38,7 +38,7 @@
 // $antlr-format allowShortRulesOnASingleLine true, allowShortBlocksOnASingleLine true, minEmptyLines 0, alignSemicolons ownLine
 // $antlr-format alignColons trailing, singleLineOverrulesHangingColon true, alignLexerCommands true, alignLabels true, alignTrailers true
 
-lexer grammar GoLexer;
+lexer grammar CommonLexer;
 
 // Keywords
 
@@ -68,6 +68,16 @@ STRUCT      : 'struct';
 SWITCH      : 'switch';
 TYPE        : 'type';
 VAR         : 'var';
+
+// Chain custom Keywords
+WORKFLOW : 'workflow';
+GENERATES : 'generates';
+NODES : 'nodes';
+BRANCHES : 'branches';
+SUCCESS: 'success';
+ERROR: 'error';
+ABORT: 'abort';
+END: 'end';
 
 IDENTIFIER: LETTER (LETTER | UNICODE_DIGIT)* -> mode(NLSEMI);
 
@@ -125,6 +135,10 @@ CARET     : '^';
 STAR      : '*';
 AMPERSAND : '&';
 RECEIVE   : '<-';
+
+// Chain custom operators
+L_TO_R: '-->';
+R_TO_L: '<--';
 
 // Number literals
 

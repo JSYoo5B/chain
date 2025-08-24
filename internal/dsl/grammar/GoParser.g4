@@ -35,7 +35,7 @@ parser grammar GoParser;
 // Insert here @header.
 
 options {
-    tokenVocab = GoLexer;
+    tokenVocab = CommonLexer;
     superClass = GoParserBase;
 }
 
