@@ -67,10 +67,6 @@ func (v *BaseChainParserVisitor) VisitNodeName(ctx *NodeNameContext) interface{}
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseChainParserVisitor) VisitDirection(ctx *DirectionContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *BaseChainParserVisitor) VisitBranchStmt(ctx *BranchStmtContext) interface{} {
 	return v.VisitChildren(ctx)
 }

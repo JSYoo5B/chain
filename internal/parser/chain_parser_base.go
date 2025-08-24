@@ -9,8 +9,9 @@ import (
 // ChainParserBase implementation.
 type ChainParserBase struct {
 	*antlr.BaseParser
-	debug bool
-	table map[string]bool
+	debug           bool
+	table           map[string]bool
+	inNodeStatement bool
 }
 
 func (p *ChainParserBase) myreset() {
@@ -127,4 +128,8 @@ func (p *ChainParserBase) isMethodExpr() bool {
 		fmt.Println("isMethodExpr Returning ", result, " for ", la)
 	}
 	return result
+}
+
+func (p *ChainParserBase) isNodeStatement() bool {
+	return p.inNodeStatement
 }

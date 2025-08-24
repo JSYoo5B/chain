@@ -52,9 +52,6 @@ type ChainParserVisitor interface {
 	// Visit a parse tree produced by ChainParser#nodeName.
 	VisitNodeName(ctx *NodeNameContext) interface{}
 
-	// Visit a parse tree produced by ChainParser#direction.
-	VisitDirection(ctx *DirectionContext) interface{}
-
 	// Visit a parse tree produced by ChainParser#branchStmt.
 	VisitBranchStmt(ctx *BranchStmtContext) interface{}
 

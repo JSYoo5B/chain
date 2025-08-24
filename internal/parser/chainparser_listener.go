@@ -52,9 +52,6 @@ type ChainParserListener interface {
 	// EnterNodeName is called when entering the nodeName production.
 	EnterNodeName(c *NodeNameContext)
 
-	// EnterDirection is called when entering the direction production.
-	EnterDirection(c *DirectionContext)
-
 	// EnterBranchStmt is called when entering the branchStmt production.
 	EnterBranchStmt(c *BranchStmtContext)
 
@@ -420,9 +417,6 @@ type ChainParserListener interface {
 
 	// ExitNodeName is called when exiting the nodeName production.
 	ExitNodeName(c *NodeNameContext)
-
-	// ExitDirection is called when exiting the direction production.
-	ExitDirection(c *DirectionContext)
 
 	// ExitBranchStmt is called when exiting the branchStmt production.
 	ExitBranchStmt(c *BranchStmtContext)

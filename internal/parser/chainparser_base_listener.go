@@ -110,12 +110,6 @@ func (s *BaseChainParserListener) EnterNodeName(ctx *NodeNameContext) {}
 // ExitNodeName is called when production nodeName is exited.
 func (s *BaseChainParserListener) ExitNodeName(ctx *NodeNameContext) {}
 
-// EnterDirection is called when production direction is entered.
-func (s *BaseChainParserListener) EnterDirection(ctx *DirectionContext) {}
-
-// ExitDirection is called when production direction is exited.
-func (s *BaseChainParserListener) ExitDirection(ctx *DirectionContext) {}
-
 // EnterBranchStmt is called when production branchStmt is entered.
 func (s *BaseChainParserListener) EnterBranchStmt(ctx *BranchStmtContext) {}
 

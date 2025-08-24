@@ -34,15 +34,15 @@ workflowBlock
     ;
 
 workflowStatementList
-    : nodesStatements eos (directionStatements)*
+    : nodesStatements directionStatements*
     ;
 
 nodesStatements
-    : NODES COLON (nodeStmt eos)*
+    : NODES COLON {this.inNodeStatement = true} (nodeStmt eos)* {this.inNodeStatement = false}
     ;
 
 nodeStmt
-    : shortVarDecl
+    : {this.isNodeStatement()}? shortVarDecl
     ;
 
 directionStatements
@@ -53,37 +53,33 @@ directionStatements
     ;
 
 successStatements
-    : SUCCESS COLON (directionStmt eos)*
+    : SUCCESS COLON (directionStmt eos)+
     ;
 
 errorStatements
-    : ERROR COLON (directionStmt eos)*
+    : ERROR COLON (directionStmt eos)+
     ;
 
 abortStatements
-    : ABORT COLON (directionStmt eos)*
+    : ABORT COLON (directionStmt eos)+
     ;
 
 branchesStatements
-    : BRANCHES COLON (branchStmt eos)*
+    : BRANCHES COLON (branchStmt eos)+
     ;
 
 directionStmt
-    : nodeName (direction nodeName)+
+    : nodeName
+    | directionStmt direction = (L_TO_R | R_TO_L) nodeName
     ;
 
 nodeName
-    : IDENTIFIER
-    | END
-    ;
-
-direction
-    : L_TO_R
-    | R_TO_L
+    : END
+    | IDENTIFIER
     ;
 
 branchStmt
-    : nodeName (branchDirection nodeName)*
+    : IDENTIFIER branchDirection nodeName
     ;
 
 branchDirection
