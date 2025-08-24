@@ -1,14 +1,65 @@
-// Code generated from GoParser.g4 by ANTLR 4.13.2. DO NOT EDIT.
+// Code generated from ChainParser.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
-package parser // GoParser
+package parser // ChainParser
 import "github.com/antlr4-go/antlr/v4"
 
-// GoParserListener is a complete listener for a parse tree produced by GoParser.
-type GoParserListener interface {
+// ChainParserListener is a complete listener for a parse tree produced by ChainParser.
+type ChainParserListener interface {
 	antlr.ParseTreeListener
 
 	// EnterSourceFile is called when entering the sourceFile production.
 	EnterSourceFile(c *SourceFileContext)
+
+	// EnterWorkflowDecl is called when entering the workflowDecl production.
+	EnterWorkflowDecl(c *WorkflowDeclContext)
+
+	// EnterWorkflowConstruct is called when entering the workflowConstruct production.
+	EnterWorkflowConstruct(c *WorkflowConstructContext)
+
+	// EnterWorkflowSpec is called when entering the workflowSpec production.
+	EnterWorkflowSpec(c *WorkflowSpecContext)
+
+	// EnterWorkflowBlock is called when entering the workflowBlock production.
+	EnterWorkflowBlock(c *WorkflowBlockContext)
+
+	// EnterWorkflowStatementList is called when entering the workflowStatementList production.
+	EnterWorkflowStatementList(c *WorkflowStatementListContext)
+
+	// EnterNodesStatements is called when entering the nodesStatements production.
+	EnterNodesStatements(c *NodesStatementsContext)
+
+	// EnterNodeStmt is called when entering the nodeStmt production.
+	EnterNodeStmt(c *NodeStmtContext)
+
+	// EnterDirectionStatements is called when entering the directionStatements production.
+	EnterDirectionStatements(c *DirectionStatementsContext)
+
+	// EnterSuccessStatements is called when entering the successStatements production.
+	EnterSuccessStatements(c *SuccessStatementsContext)
+
+	// EnterErrorStatements is called when entering the errorStatements production.
+	EnterErrorStatements(c *ErrorStatementsContext)
+
+	// EnterAbortStatements is called when entering the abortStatements production.
+	EnterAbortStatements(c *AbortStatementsContext)
+
+	// EnterBranchesStatements is called when entering the branchesStatements production.
+	EnterBranchesStatements(c *BranchesStatementsContext)
+
+	// EnterDirectionStmt is called when entering the directionStmt production.
+	EnterDirectionStmt(c *DirectionStmtContext)
+
+	// EnterNodeName is called when entering the nodeName production.
+	EnterNodeName(c *NodeNameContext)
+
+	// EnterDirection is called when entering the direction production.
+	EnterDirection(c *DirectionContext)
+
+	// EnterBranchStmt is called when entering the branchStmt production.
+	EnterBranchStmt(c *BranchStmtContext)
+
+	// EnterBranchDirection is called when entering the branchDirection production.
+	EnterBranchDirection(c *BranchDirectionContext)
 
 	// EnterPackageClause is called when entering the packageClause production.
 	EnterPackageClause(c *PackageClauseContext)
@@ -327,6 +378,57 @@ type GoParserListener interface {
 
 	// ExitSourceFile is called when exiting the sourceFile production.
 	ExitSourceFile(c *SourceFileContext)
+
+	// ExitWorkflowDecl is called when exiting the workflowDecl production.
+	ExitWorkflowDecl(c *WorkflowDeclContext)
+
+	// ExitWorkflowConstruct is called when exiting the workflowConstruct production.
+	ExitWorkflowConstruct(c *WorkflowConstructContext)
+
+	// ExitWorkflowSpec is called when exiting the workflowSpec production.
+	ExitWorkflowSpec(c *WorkflowSpecContext)
+
+	// ExitWorkflowBlock is called when exiting the workflowBlock production.
+	ExitWorkflowBlock(c *WorkflowBlockContext)
+
+	// ExitWorkflowStatementList is called when exiting the workflowStatementList production.
+	ExitWorkflowStatementList(c *WorkflowStatementListContext)
+
+	// ExitNodesStatements is called when exiting the nodesStatements production.
+	ExitNodesStatements(c *NodesStatementsContext)
+
+	// ExitNodeStmt is called when exiting the nodeStmt production.
+	ExitNodeStmt(c *NodeStmtContext)
+
+	// ExitDirectionStatements is called when exiting the directionStatements production.
+	ExitDirectionStatements(c *DirectionStatementsContext)
+
+	// ExitSuccessStatements is called when exiting the successStatements production.
+	ExitSuccessStatements(c *SuccessStatementsContext)
+
+	// ExitErrorStatements is called when exiting the errorStatements production.
+	ExitErrorStatements(c *ErrorStatementsContext)
+
+	// ExitAbortStatements is called when exiting the abortStatements production.
+	ExitAbortStatements(c *AbortStatementsContext)
+
+	// ExitBranchesStatements is called when exiting the branchesStatements production.
+	ExitBranchesStatements(c *BranchesStatementsContext)
+
+	// ExitDirectionStmt is called when exiting the directionStmt production.
+	ExitDirectionStmt(c *DirectionStmtContext)
+
+	// ExitNodeName is called when exiting the nodeName production.
+	ExitNodeName(c *NodeNameContext)
+
+	// ExitDirection is called when exiting the direction production.
+	ExitDirection(c *DirectionContext)
+
+	// ExitBranchStmt is called when exiting the branchStmt production.
+	ExitBranchStmt(c *BranchStmtContext)
+
+	// ExitBranchDirection is called when exiting the branchDirection production.
+	ExitBranchDirection(c *BranchDirectionContext)
 
 	// ExitPackageClause is called when exiting the packageClause production.
 	ExitPackageClause(c *PackageClauseContext)

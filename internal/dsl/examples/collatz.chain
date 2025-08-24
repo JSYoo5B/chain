@@ -1,0 +1,40 @@
+package branch
+
+import (
+    "context"
+)
+
+workflow basicCollatzFunction() generates SimpleCollatz[int] {
+    nodes:
+        branch := checkNext()
+        even := half()
+        odd1 := triple()
+        odd2 := inc()
+
+    branches:
+        branch -"even"-> even
+        branch -"odd"-> odd1
+
+    success:
+        even --> end
+        odd1 --> odd2 --> end
+}
+
+// check multiple workflow definition and skip generates
+workflow shortcutCollatzFunction() ShortcutCollatz[int] {
+    nodes:
+        // check multiple node definition
+        branch, even := checkNext(), half()
+        odd1, odd2 := triple(), inc()
+
+    success:
+        even --> end
+
+    branches:
+        branch -`even`-> even
+        branch -`odd`-> odd1
+
+    // check multiple success labels
+    success:
+        odd1 --> odd2 --> even
+}

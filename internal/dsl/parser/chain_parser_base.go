@@ -6,31 +6,31 @@ import (
 	"strings"
 )
 
-// GoParserBase implementation.
-type GoParserBase struct {
+// ChainParserBase implementation.
+type ChainParserBase struct {
 	*antlr.BaseParser
 	debug bool
 	table map[string]bool
 }
 
-func (p *GoParserBase) myreset() {
+func (p *ChainParserBase) myreset() {
 	p.debug = false
 	p.table = make(map[string]bool)
 }
 
-func (p *GoParserBase) closingBracket() bool {
+func (p *ChainParserBase) closingBracket() bool {
 	stream := p.GetTokenStream()
 	la := stream.LT(1)
-	return la.GetTokenType() == GoParserR_PAREN || la.GetTokenType() == GoParserR_CURLY || la.GetTokenType() == antlr.TokenEOF
+	return la.GetTokenType() == ChainParserR_PAREN || la.GetTokenType() == ChainParserR_CURLY || la.GetTokenType() == antlr.TokenEOF
 }
 
-func (p *GoParserBase) isNotReceive() bool {
+func (p *ChainParserBase) isNotReceive() bool {
 	stream := p.GetTokenStream()
 	la := stream.LT(2)
-	return la.GetTokenType() != GoParserRECEIVE
+	return la.GetTokenType() != ChainParserRECEIVE
 }
 
-func (p *GoParserBase) addImportSpec() {
+func (p *ChainParserBase) addImportSpec() {
 	ctx := p.GetParserRuleContext()
 	importSpec := ctx.(IImportSpecContext)
 	if importSpec == nil {
@@ -56,14 +56,14 @@ func (p *GoParserBase) addImportSpec() {
 	}
 }
 
-func (p *GoParserBase) isOperand() bool {
+func (p *ChainParserBase) isOperand() bool {
 	stream := p.GetTokenStream()
 	la := stream.LT(1)
 	result := true
 	if la.GetText() == "err" {
 		return true
 	}
-	if la.GetTokenType() != GoParserIDENTIFIER {
+	if la.GetTokenType() != ChainParserIDENTIFIER {
 		if p.debug {
 			fmt.Println("isOperand Returning ", result, " for ", la)
 		}
@@ -71,7 +71,7 @@ func (p *GoParserBase) isOperand() bool {
 	}
 	result, _ = p.table[la.GetText()]
 	la2 := stream.LT(2)
-	if la2.GetTokenType() != GoParserDOT {
+	if la2.GetTokenType() != ChainParserDOT {
 		result = true
 		if p.debug {
 			fmt.Println("isOperand Returning ", result, " for ", la)
@@ -79,7 +79,7 @@ func (p *GoParserBase) isOperand() bool {
 		return result
 	}
 	la3 := stream.LT(3)
-	if la3.GetTokenType() == GoParserL_PAREN {
+	if la3.GetTokenType() == ChainParserL_PAREN {
 		result = true
 		if p.debug {
 			fmt.Println("isOperand Returning ", result, " for ", la)
@@ -92,27 +92,27 @@ func (p *GoParserBase) isOperand() bool {
 	return result
 }
 
-func (p *GoParserBase) isConversion() bool {
+func (p *ChainParserBase) isConversion() bool {
 	stream := p.GetTokenStream()
 	la := stream.LT(1)
-	result := la.GetTokenType() != GoParserIDENTIFIER
+	result := la.GetTokenType() != ChainParserIDENTIFIER
 	if p.debug {
 		fmt.Println("isConversion Returning ", result, " for ", la)
 	}
 	return result
 }
 
-func (p *GoParserBase) isMethodExpr() bool {
+func (p *ChainParserBase) isMethodExpr() bool {
 	stream := p.GetTokenStream()
 	la := stream.LT(1)
 	result := true
-	if la.GetTokenType() == GoParserSTAR {
+	if la.GetTokenType() == ChainParserSTAR {
 		if p.debug {
 			fmt.Println("isMethodExpr Returning ", result, " for ", la)
 		}
 		return result
 	}
-	if la.GetTokenType() != GoParserIDENTIFIER {
+	if la.GetTokenType() != ChainParserIDENTIFIER {
 		result = false
 		if p.debug {
 			fmt.Println("isMethodExpr Returning ", result, " for ", la)
