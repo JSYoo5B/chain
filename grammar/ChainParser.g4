@@ -14,7 +14,7 @@ options {
 import GoParser;
 
 sourceFile
-    : packageClause EOS (importDecl eos)* (workflowDecl eos)* EOF
+    : packageClause eos (importDecl eos)* (workflowDecl eos)* EOF
     ;
 
 workflowDecl
@@ -34,7 +34,7 @@ workflowBlock
     ;
 
 workflowStatementList
-    : nodesStatements EOS (directionStatements)*
+    : nodesStatements eos (directionStatements)*
     ;
 
 nodesStatements

@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 
 PROJECT_DIR=$(shell pwd)
-GRAMMAR_DIR=$(PROJECT_DIR)/internal/dsl/grammar
-ANTLR_CODEGEN_DIR=$(PROJECT_DIR)/internal/dsl/parser
+GRAMMAR_DIR=$(PROJECT_DIR)/grammar
+ANTLR_CODEGEN_DIR=$(PROJECT_DIR)/internal/parser
 
 .PHONY: antlr
 
