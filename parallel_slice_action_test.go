@@ -35,7 +35,7 @@ func TestParallelSliceAction(t *testing.T) {
 		})
 
 	t.Run("simple parallel iteration", func(t *testing.T) {
-		doubles := NewParallelSliceAction("MapDouble", double)
+		doubles := AsParallelSliceAction("MapDouble", double)
 		input := []int{1, 2, 3, 4, 5}
 		expected := []int{2, 4, 6, 8, 10}
 
@@ -45,7 +45,7 @@ func TestParallelSliceAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("error in parallel iteration continues", func(t *testing.T) {
-		doubles := NewParallelSliceAction("MapDoubleContinue", positiveDouble)
+		doubles := AsParallelSliceAction("MapDoubleContinue", positiveDouble)
 		input := []int{1, 2, -1, 4, 5}
 		expected := []int{2, 4, 0, 8, 10}
 
@@ -55,7 +55,7 @@ func TestParallelSliceAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("panic in parallel iteration", func(t *testing.T) {
-		divides := NewParallelSliceAction("MapDivide10", divide10)
+		divides := AsParallelSliceAction("MapDivide10", divide10)
 		input := []int{10, 5, 2, 0, 1}
 		expected := []int{1, 2, 5, 0, 10}
 

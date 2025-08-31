@@ -9,13 +9,17 @@ import (
 	"sync"
 )
 
-// NewParallelSliceAction creates an Action that processes a slice's elements in parallel.
+// AsParallelSliceAction creates an Action that processes a slice's elements in parallel.
 // Each element is transformed by the given action concurrently, maintaining the original order.
 //
 // The action handles panics gracefully, continuing execution of other goroutines
 // when one fails. If any error or panic occurs, the action returns an error
 // but still provides the processed output for successful operations.
-func NewParallelSliceAction[T any](name string, action Action[T]) Action[[]T] {
+func AsParallelSliceAction[T any](name string, action Action[T]) Action[[]T] {
+	if action == nil {
+		panic("action cannot be nil")
+	}
+
 	return &parallelSliceAction[T]{
 		name:   name,
 		action: action,
