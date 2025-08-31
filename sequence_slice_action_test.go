@@ -35,7 +35,7 @@ func TestSequenceSliceAction(t *testing.T) {
 		})
 
 	t.Run("simple iteration", func(t *testing.T) {
-		doubles := NewSequenceSliceAction("MapDouble", double, false)
+		doubles := AsSequenceSliceAction("MapDouble", double, false)
 		input := []int{1, 2, 3, 4, 5}
 		expected := []int{2, 4, 6, 8, 10}
 
@@ -45,7 +45,7 @@ func TestSequenceSliceAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("error in iteration stops", func(t *testing.T) {
-		doubles := NewSequenceSliceAction("MapDoubleStop", positiveDouble, true)
+		doubles := AsSequenceSliceAction("MapDoubleStop", positiveDouble, true)
 		input := []int{1, 2, -1, 4, 5}
 		expected := []int{2, 4, 0, 4, 5}
 
@@ -55,7 +55,7 @@ func TestSequenceSliceAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("error in iteration continues", func(t *testing.T) {
-		doubles := NewSequenceSliceAction("MapDoubleContinue", positiveDouble, false)
+		doubles := AsSequenceSliceAction("MapDoubleContinue", positiveDouble, false)
 		input := []int{1, 2, -1, 4, 5}
 		expected := []int{2, 4, 0, 8, 10}
 
@@ -65,7 +65,7 @@ func TestSequenceSliceAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("panic in iteration", func(t *testing.T) {
-		divides := NewSequenceSliceAction("MapDivide10", divide10, false)
+		divides := AsSequenceSliceAction("MapDivide10", divide10, false)
 		input := []int{10, 5, 2, 0, 1}
 		expected := []int{1, 2, 5, 0, 1}
 

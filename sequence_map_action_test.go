@@ -35,7 +35,7 @@ func TestSequenceMapAction(t *testing.T) {
 		})
 
 	t.Run("simple iteration", func(t *testing.T) {
-		doubles := NewSequenceMapAction[string, int]("MapDouble", double)
+		doubles := AsSequenceMapAction[string, int]("MapDouble", double)
 		input := map[string]int{"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
 		expected := map[string]int{"one": 2, "two": 4, "three": 6, "four": 8, "five": 10}
 
@@ -45,7 +45,7 @@ func TestSequenceMapAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("error in iteration continues", func(t *testing.T) {
-		doubles := NewSequenceMapAction[string, int]("MapDoubleContinue", positiveDouble)
+		doubles := AsSequenceMapAction[string, int]("MapDoubleContinue", positiveDouble)
 		input := map[string]int{"one": 1, "two": 2, "minus": -1, "four": 4, "five": 5}
 		expected := map[string]int{"one": 2, "two": 4, "minus": 0, "four": 8, "five": 10}
 
@@ -55,7 +55,7 @@ func TestSequenceMapAction(t *testing.T) {
 		assert.Equal(t, expected, output)
 	})
 	t.Run("panic in iteration", func(t *testing.T) {
-		divides := NewSequenceMapAction[string, int]("MapDivide10", divide10)
+		divides := AsSequenceMapAction[string, int]("MapDivide10", divide10)
 		input := map[string]int{"ten": 10, "five": 5, "two": 2, "zero": 0, "one": 1}
 		expected := map[string]int{"ten": 1, "five": 2, "two": 5, "zero": 0, "one": 10}
 

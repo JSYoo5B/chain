@@ -8,12 +8,12 @@ import (
 	"runtime/debug"
 )
 
-// NewRetryableAction creates an Action that retries the mainAction up to maxRetry times.
+// AsRetryableAction creates an Action that retries the mainAction up to maxRetry times.
 //
 // If the mainAction fails, it executes the rollbackAction before the next retry attempt.
 // The rollbackAction is not executed on the final attempt if it fails.
 // rollbackAction can be skipped when it is nil.
-func NewRetryableAction[T any](name string, mainAction, rollbackAction Action[T], maxRetry int) Action[T] {
+func AsRetryableAction[T any](name string, mainAction, rollbackAction Action[T], maxRetry int) Action[T] {
 	if mainAction == nil {
 		panic("action cannot be nil")
 	} else if maxRetry < 1 {

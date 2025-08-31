@@ -10,13 +10,13 @@ import (
 	"sync"
 )
 
-// NewParallelMapAction creates an Action that processes a map's values in parallel.
+// AsParallelMapAction creates an Action that processes a map's values in parallel.
 // Each value is transformed by the given action concurrently, maintaining the original keys.
 //
 // The action handles panics gracefully, continuing execution of other goroutines
 // when one fails. If any error or panic occurs, the action returns an error
 // but still provides the processed output for successful operations.
-func NewParallelMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
+func AsParallelMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
 	if action == nil {
 		panic("action cannot be nil")
 	}

@@ -9,12 +9,12 @@ import (
 	"runtime/debug"
 )
 
-// NewSequenceMapAction creates an Action that processes a map's values sequentially.
+// AsSequenceMapAction creates an Action that processes a map's values sequentially.
 // Each value is transformed by the given action one at a time, maintaining the original keys.
 //
 // Unlike parallel processing, sequential execution stops immediately when a panic occurs,
 // leaving unprocessed values unchanged in the output.
-func NewSequenceMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
+func AsSequenceMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
 	if action == nil {
 		panic("action cannot be nil")
 	}
