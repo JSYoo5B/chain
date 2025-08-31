@@ -10,6 +10,8 @@ type runnerNameKey struct{}
 func WithRunnerDepth(ctx context.Context, currentRunner string) context.Context {
 	if ctx == nil {
 		panic("cannot create context from nil parent")
+	} else if currentRunner == "" {
+		return ctx
 	}
 
 	runnerName := currentRunner
