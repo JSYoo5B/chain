@@ -39,8 +39,11 @@ func (r retryableAction[T]) Run(ctx context.Context, input T) (output T, err err
 		}
 	}()
 
-	mCtx := logger.WithRunnerDepth(pCtx, r.mainAction.Name())
-	rCtx := logger.WithRunnerDepth(pCtx, r.rollbackAction.Name())
+	var mCtx, rCtx context.Context
+	mCtx = logger.WithRunnerDepth(pCtx, r.mainAction.Name())
+	if r.rollbackAction != nil {
+		rCtx = logger.WithRunnerDepth(pCtx, r.rollbackAction.Name())
+	}
 	for attempt := 1; attempt <= r.maxRetry; attempt++ {
 		logger.Debugf(pCtx, "chain: running %s, attempt: %d", r.mainAction.Name(), attempt)
 
@@ -49,8 +52,10 @@ func (r retryableAction[T]) Run(ctx context.Context, input T) (output T, err err
 			return output, nil
 		}
 
-		if attempt < r.maxRetry {
-			logger.Debugf(pCtx, "chain: rolling back with %s, error occurred: %v", r.rollbackAction.Name(), err)
+		logger.Debugf(pCtx, "chain: error occurred: %v", err)
+
+		if r.rollbackAction != nil && attempt < r.maxRetry {
+			logger.Debugf(pCtx, "chain: rolling back with %s", r.rollbackAction.Name())
 			output, err = r.rollbackAction.Run(rCtx, output)
 			if err != nil {
 				return output, fmt.Errorf("rolling back failed: %w", err)
