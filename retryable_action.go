@@ -8,6 +8,11 @@ import (
 	"runtime/debug"
 )
 
+// NewRetryableAction creates an Action that retries the mainAction up to maxRetry times.
+//
+// If the mainAction fails, it executes the rollbackAction before the next retry attempt.
+// The rollbackAction is not executed on the final attempt if it fails.
+// rollbackAction can be skipped when it is nil.
 func NewRetryableAction[T any](name string, mainAction, rollbackAction Action[T], maxRetry int) Action[T] {
 	return &retryableAction[T]{
 		name:           name,
