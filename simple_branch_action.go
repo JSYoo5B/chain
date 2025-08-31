@@ -21,6 +21,12 @@ type BranchFunc[T any] func(ctx context.Context, output T) (direction string, er
 // This allows for the creation of simple BranchActions without manually defining a separate struct
 // that implements the BranchAction interface.
 func NewSimpleBranchAction[T any](name string, runFunc RunFunc[T], directions []string, branchFunc BranchFunc[T]) BranchAction[T] {
+	if len(directions) == 0 {
+		panic("directions cannot be empty")
+	} else if branchFunc == nil {
+		panic("branchFunc cannot be nil")
+	}
+
 	if runFunc == nil {
 		runFunc = func(_ context.Context, input T) (T, error) { return input, nil }
 	}

@@ -16,6 +16,10 @@ import (
 // - When false: continues processing all elements even if errors occur
 // Panics always stop execution regardless of the stopOnError setting.
 func NewSequenceSliceAction[T any](name string, action Action[T], stopOnError bool) Action[[]T] {
+	if action == nil {
+		panic("action cannot be nil")
+	}
+
 	return &sequenceSliceAction[T]{
 		name:        name,
 		action:      action,

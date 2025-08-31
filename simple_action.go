@@ -15,6 +15,10 @@ type RunFunc[T any] func(ctx context.Context, input T) (output T, err error)
 // This allows for the creation of simple Actions without manually defining a separate struct
 // that implements the Action interface.
 func NewSimpleAction[T any](name string, runFunc RunFunc[T]) Action[T] {
+	if runFunc == nil {
+		panic("runFunc cannot be nil")
+	}
+
 	return &simpleAction[T]{
 		name:    name,
 		runFunc: runFunc,

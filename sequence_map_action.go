@@ -15,6 +15,10 @@ import (
 // Unlike parallel processing, sequential execution stops immediately when a panic occurs,
 // leaving unprocessed values unchanged in the output.
 func NewSequenceMapAction[K comparable, T any](name string, action Action[T]) Action[map[K]T] {
+	if action == nil {
+		panic("action cannot be nil")
+	}
+
 	return &sequenceMapAction[K, T]{
 		name:   name,
 		action: action,

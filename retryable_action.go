@@ -14,6 +14,12 @@ import (
 // The rollbackAction is not executed on the final attempt if it fails.
 // rollbackAction can be skipped when it is nil.
 func NewRetryableAction[T any](name string, mainAction, rollbackAction Action[T], maxRetry int) Action[T] {
+	if mainAction == nil {
+		panic("action cannot be nil")
+	} else if maxRetry < 1 {
+		panic("maxRetry must be greater than 0")
+	}
+
 	return &retryableAction[T]{
 		name:           name,
 		mainAction:     mainAction,

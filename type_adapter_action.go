@@ -19,6 +19,14 @@ func NewTypeAdapterAction[T any, U any](
 	getter InternalValueGetter[T, U],
 	setter InternalValueSetter[T, U],
 ) Action[T] {
+	if action == nil {
+		panic("action cannot be nil")
+	} else if getter == nil {
+		panic("getter cannot be nil")
+	} else if setter == nil {
+		panic("setter cannot be nil")
+	}
+
 	return &typeAdapterAction[T, U]{
 		action: action,
 		getter: getter,
