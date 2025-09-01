@@ -28,6 +28,15 @@ func AsRetryableAction[T any](name string, mainAction, rollbackAction Action[T],
 	}
 }
 
+// SkipRollback provides an Action that explicitly skips the rollback process
+// for a RetryableAction.
+//
+// When creating a RetryableAction with AsRetryableAction, use SkipRollback()
+// as the rollback action to make the intent clear, rather than passing raw nil.
+func SkipRollback[T any]() Action[T] {
+	return nil
+}
+
 type retryableAction[T any] struct {
 	name           string
 	mainAction     Action[T]
