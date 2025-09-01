@@ -66,7 +66,7 @@ func TestRetryableAction_withoutRollback(t *testing.T) {
 			}
 			return input - 1, fmt.Errorf("%d was not zero", input)
 		})
-	expectZero := AsRetryableAction("expectZero", checkZeroAndDecrease, nil, 3)
+	expectZero := AsRetryableAction("expectZero", checkZeroAndDecrease, SkipRollback[int](), 3)
 
 	t.Run("direct success", func(t *testing.T) {
 		output, err := expectZero.Run(context.Background(), 0)
