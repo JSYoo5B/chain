@@ -78,7 +78,7 @@ type InternalValueGetter[T any, U any] InternalTypeGetter[T, U]
 type InternalValueSetter[T any, U any] ExternalTypeSetter[T, U]
 
 // Deprecated. Use AdaptAction
-func NewInternalValueAction[T any, U any](
+func NewTypeAdapterAction[T any, U any](
 	action Action[U],
 	getter InternalValueGetter[T, U],
 	setter InternalValueSetter[T, U],
