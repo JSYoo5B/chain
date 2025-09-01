@@ -1,0 +1,34 @@
+{{- /* gotype: github.com/JSYoo5B/chain/internal/code.ChainCode */ -}}
+// Code generated from chain-gen v1.2.0. DO NOT EDIT.
+package {{ .PackageName }}
+
+import (
+	"github.com/JSYoo5B/chain"
+	{{- range .Imports }}
+	{{ . }}
+	{{- end }}
+)
+
+{{ range .Workflows -}}
+func {{ .ConstructName }} ({{ .ConstructParams }}) *chain.Pipeline[{{.WorkflowType}}] {
+	// declare nodes with constructors
+    {{- range .NodeConstructors }}
+	{{ . }}
+	{{- end }}
+
+	// construct workflow with nodes
+	workflow := chain.NewWorkflow[{{.WorkflowType}}](
+		{{ .WorkflowName }},
+		{{- range .Nodes }}
+		{{ .VarName }},
+		{{- end }}
+	)
+
+	// describe action plans
+	{{- range .Edges }}
+	workflow.SetRunPlan({{.BaseNode}}, {{.ActionPlanCode}})
+	{{- end }}
+
+	return workflow
+}
+{{- end }}
