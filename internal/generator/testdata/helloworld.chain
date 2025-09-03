@@ -1,0 +1,15 @@
+package hello
+
+workflow helloWorld() generates helloWorld[string] {
+    prerequisite {
+        hello := printAction("Hello")
+        world := printAction("World")
+    }
+
+    nodes:
+        hello, world
+
+    success:
+        hello --> world
+        world --> end
+}
