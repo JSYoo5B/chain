@@ -1,3 +1,3 @@
 package parser
 
-//go:generate make -C ../../ antlr
+//go:generate make -C ../../ parser
