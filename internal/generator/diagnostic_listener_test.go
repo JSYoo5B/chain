@@ -1,33 +1,39 @@
 package generator
 
 import (
-	_ "embed"
+	"embed"
 	"github.com/JSYoo5B/chain/internal/parser"
 	"github.com/antlr4-go/antlr/v4"
+	"io/fs"
 	"testing"
 )
 
-//go:embed testdata/helloworld.chain
-var helloWorld string
-
-//go:embed testdata/collatz.chain
-var collatz string
+//go:embed testdata/*.chain
+var testDslFs embed.FS
 
 func TestChainParserAmbiguity(t *testing.T) {
-	testCases := map[string]struct {
-		input string
-	}{
-		"hello world": {
-			input: helloWorld,
-		},
-		"collatz": {
-			input: collatz,
-		},
-	}
+	testCases := make(map[string]string)
 
-	for name, tc := range testCases {
+	fs.WalkDir(testDslFs, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		data, err := testDslFs.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		testCases[path] = string(data)
+		return nil
+	})
+
+	for name, source := range testCases {
 		t.Run(name, func(t *testing.T) {
-			inputStream := antlr.NewInputStream(tc.input)
+			inputStream := antlr.NewInputStream(source)
 			lexer := parser.NewCommonLexer(inputStream)
 			stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 			p := parser.NewChainParser(stream)
@@ -42,10 +48,10 @@ func TestChainParserAmbiguity(t *testing.T) {
 			p.SourceFile()
 
 			if listener.hasAmbiguity() {
-				t.Errorf("Grammar ambiguity detected in input:\n---INPUT---\n%s\n---AMBIGUITIES---\n%s\n-----------", tc.input, listener.getAmbiguity())
+				t.Logf("Grammar ambiguity detected in source:\n---INPUT---\n%s\n---AMBIGUITIES---\n%s\n-----------", source, listener.getAmbiguity())
 			}
 			if listener.hasSyntaxError() {
-				t.Errorf("Grammar syntax error detected in input:\n---INPUT---\n%s\n---SYNTAX ERRORS---\n%s\n-----------", tc.input, listener.getSyntaxError())
+				t.Errorf("Grammar syntax error detected in source:\n---INPUT---\n%s\n---SYNTAX ERRORS---\n%s\n-----------", source, listener.getSyntaxError())
 			}
 		})
 	}
