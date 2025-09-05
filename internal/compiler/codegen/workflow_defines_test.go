@@ -1,4 +1,4 @@
-package code
+package codegen
 
 import (
 	"github.com/JSYoo5B/chain"
