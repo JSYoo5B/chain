@@ -26,35 +26,29 @@ func (s *BaseChainParserListener) EnterSourceFile(ctx *SourceFileContext) {}
 // ExitSourceFile is called when production sourceFile is exited.
 func (s *BaseChainParserListener) ExitSourceFile(ctx *SourceFileContext) {}
 
-// EnterWorkflowDecl is called when production workflowDecl is entered.
-func (s *BaseChainParserListener) EnterWorkflowDecl(ctx *WorkflowDeclContext) {}
+// EnterWorkflowDefine is called when production workflowDefine is entered.
+func (s *BaseChainParserListener) EnterWorkflowDefine(ctx *WorkflowDefineContext) {}
 
-// ExitWorkflowDecl is called when production workflowDecl is exited.
-func (s *BaseChainParserListener) ExitWorkflowDecl(ctx *WorkflowDeclContext) {}
+// ExitWorkflowDefine is called when production workflowDefine is exited.
+func (s *BaseChainParserListener) ExitWorkflowDefine(ctx *WorkflowDefineContext) {}
 
-// EnterWorkflowConstruct is called when production workflowConstruct is entered.
-func (s *BaseChainParserListener) EnterWorkflowConstruct(ctx *WorkflowConstructContext) {}
+// EnterWorkflowDeclare is called when production workflowDeclare is entered.
+func (s *BaseChainParserListener) EnterWorkflowDeclare(ctx *WorkflowDeclareContext) {}
 
-// ExitWorkflowConstruct is called when production workflowConstruct is exited.
-func (s *BaseChainParserListener) ExitWorkflowConstruct(ctx *WorkflowConstructContext) {}
+// ExitWorkflowDeclare is called when production workflowDeclare is exited.
+func (s *BaseChainParserListener) ExitWorkflowDeclare(ctx *WorkflowDeclareContext) {}
 
-// EnterWorkflowSpec is called when production workflowSpec is entered.
-func (s *BaseChainParserListener) EnterWorkflowSpec(ctx *WorkflowSpecContext) {}
+// EnterWorkflowParameters is called when production workflowParameters is entered.
+func (s *BaseChainParserListener) EnterWorkflowParameters(ctx *WorkflowParametersContext) {}
 
-// ExitWorkflowSpec is called when production workflowSpec is exited.
-func (s *BaseChainParserListener) ExitWorkflowSpec(ctx *WorkflowSpecContext) {}
+// ExitWorkflowParameters is called when production workflowParameters is exited.
+func (s *BaseChainParserListener) ExitWorkflowParameters(ctx *WorkflowParametersContext) {}
 
 // EnterWorkflowBlock is called when production workflowBlock is entered.
 func (s *BaseChainParserListener) EnterWorkflowBlock(ctx *WorkflowBlockContext) {}
 
 // ExitWorkflowBlock is called when production workflowBlock is exited.
 func (s *BaseChainParserListener) ExitWorkflowBlock(ctx *WorkflowBlockContext) {}
-
-// EnterWorkflowStatementList is called when production workflowStatementList is entered.
-func (s *BaseChainParserListener) EnterWorkflowStatementList(ctx *WorkflowStatementListContext) {}
-
-// ExitWorkflowStatementList is called when production workflowStatementList is exited.
-func (s *BaseChainParserListener) ExitWorkflowStatementList(ctx *WorkflowStatementListContext) {}
 
 // EnterPrerequisteStatements is called when production prerequisteStatements is entered.
 func (s *BaseChainParserListener) EnterPrerequisteStatements(ctx *PrerequisteStatementsContext) {}

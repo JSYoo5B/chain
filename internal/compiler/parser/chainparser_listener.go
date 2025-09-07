@@ -10,20 +10,17 @@ type ChainParserListener interface {
 	// EnterSourceFile is called when entering the sourceFile production.
 	EnterSourceFile(c *SourceFileContext)
 
-	// EnterWorkflowDecl is called when entering the workflowDecl production.
-	EnterWorkflowDecl(c *WorkflowDeclContext)
+	// EnterWorkflowDefine is called when entering the workflowDefine production.
+	EnterWorkflowDefine(c *WorkflowDefineContext)
 
-	// EnterWorkflowConstruct is called when entering the workflowConstruct production.
-	EnterWorkflowConstruct(c *WorkflowConstructContext)
+	// EnterWorkflowDeclare is called when entering the workflowDeclare production.
+	EnterWorkflowDeclare(c *WorkflowDeclareContext)
 
-	// EnterWorkflowSpec is called when entering the workflowSpec production.
-	EnterWorkflowSpec(c *WorkflowSpecContext)
+	// EnterWorkflowParameters is called when entering the workflowParameters production.
+	EnterWorkflowParameters(c *WorkflowParametersContext)
 
 	// EnterWorkflowBlock is called when entering the workflowBlock production.
 	EnterWorkflowBlock(c *WorkflowBlockContext)
-
-	// EnterWorkflowStatementList is called when entering the workflowStatementList production.
-	EnterWorkflowStatementList(c *WorkflowStatementListContext)
 
 	// EnterPrerequisteStatements is called when entering the prerequisteStatements production.
 	EnterPrerequisteStatements(c *PrerequisteStatementsContext)
@@ -388,20 +385,17 @@ type ChainParserListener interface {
 	// ExitSourceFile is called when exiting the sourceFile production.
 	ExitSourceFile(c *SourceFileContext)
 
-	// ExitWorkflowDecl is called when exiting the workflowDecl production.
-	ExitWorkflowDecl(c *WorkflowDeclContext)
+	// ExitWorkflowDefine is called when exiting the workflowDefine production.
+	ExitWorkflowDefine(c *WorkflowDefineContext)
 
-	// ExitWorkflowConstruct is called when exiting the workflowConstruct production.
-	ExitWorkflowConstruct(c *WorkflowConstructContext)
+	// ExitWorkflowDeclare is called when exiting the workflowDeclare production.
+	ExitWorkflowDeclare(c *WorkflowDeclareContext)
 
-	// ExitWorkflowSpec is called when exiting the workflowSpec production.
-	ExitWorkflowSpec(c *WorkflowSpecContext)
+	// ExitWorkflowParameters is called when exiting the workflowParameters production.
+	ExitWorkflowParameters(c *WorkflowParametersContext)
 
 	// ExitWorkflowBlock is called when exiting the workflowBlock production.
 	ExitWorkflowBlock(c *WorkflowBlockContext)
-
-	// ExitWorkflowStatementList is called when exiting the workflowStatementList production.
-	ExitWorkflowStatementList(c *WorkflowStatementListContext)
 
 	// ExitPrerequisteStatements is called when exiting the prerequisteStatements production.
 	ExitPrerequisteStatements(c *PrerequisteStatementsContext)

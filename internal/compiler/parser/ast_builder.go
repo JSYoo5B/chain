@@ -2,19 +2,22 @@ package parser
 
 import (
 	"github.com/JSYoo5B/chain/internal/compiler/ast"
+	"github.com/antlr4-go/antlr/v4"
 	"strconv"
 )
 
 type AstBuilder struct {
 	*BaseChainParserListener
+	tokenStream antlr.TokenStream
 
 	Result          ast.ChainCode
 	currentWorkflow *ast.WorkflowStatement
 }
 
-func NewAstBuilder() *AstBuilder {
+func NewAstBuilder(stream antlr.TokenStream) *AstBuilder {
 	return &AstBuilder{
 		BaseChainParserListener: &BaseChainParserListener{},
+		tokenStream:             stream,
 		Result:                  ast.ChainCode{},
 		currentWorkflow:         nil,
 	}
@@ -51,4 +54,51 @@ func (a *AstBuilder) EnterImportSpec(ctx *ImportSpecContext) {
 	}
 
 	a.Result.Imports = append(a.Result.Imports, imp)
+}
+
+func (a *AstBuilder) EnterWorkflowDefine(ctx *WorkflowDefineContext) {
+	startToken := ctx.GetStart()
+
+	workflow := ast.WorkflowStatement{
+		CodeLocation: newCodeLocationFromToken(startToken),
+	}
+
+	a.currentWorkflow = &workflow
+}
+
+func (a *AstBuilder) ExitWorkflowDefine(_ *WorkflowDefineContext) {
+	a.Result.Workflows = append(a.Result.Workflows, *a.currentWorkflow)
+	a.currentWorkflow = nil
+}
+
+func (a *AstBuilder) EnterWorkflowDeclare(ctx *WorkflowDeclareContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	startToken := ctx.GetStart()
+
+	paramStart, paramEnd := ctx.WorkflowParameters().GetStart(), ctx.WorkflowParameters().GetStop()
+	paramText := a.tokenStream.GetTextFromTokens(paramStart, paramEnd)
+
+	typeStart, typeEnd := ctx.GetWorkflowType().GetStart(), ctx.GetWorkflowType().GetStop()
+	typeText := a.tokenStream.GetTextFromTokens(typeStart, typeEnd)
+
+	declare := ast.WorkflowDeclaration{
+		ConstructorName: newCodeLocationFromToken(ctx.GetWorkflowConstruct()),
+		ConstructorParams: ast.CodeLocation{
+			Line:   paramStart.GetLine(),
+			Column: paramStart.GetColumn(),
+			Text:   paramText,
+		},
+		WorkflowName: newCodeLocationFromToken(ctx.GetWorkflowName()),
+		WorkflowType: ast.CodeLocation{
+			Line:   typeStart.GetLine(),
+			Column: typeStart.GetColumn(),
+			Text:   typeText,
+		},
+		CodeLocation: newCodeLocationFromToken(startToken),
+	}
+
+	a.currentWorkflow.WorkflowDeclaration = declare
 }

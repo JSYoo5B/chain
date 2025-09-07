@@ -11,26 +11,25 @@ options {
 import GoParser;
 
 sourceFile
-    : packageClause eos (importDecl eos)* (workflowDecl eos)* EOF
+    : packageClause eos (importDecl eos)* (workflowDefine eos)* EOF
     ;
 
-workflowDecl
-    : WORKFLOW workflowConstruct parameters GENERATES? workflowSpec workflowBlock
+workflowDefine
+    : WORKFLOW workflowDeclare L_CURLY workflowBlock R_CURLY
     ;
 
-workflowConstruct
-    : IDENTIFIER
+workflowDeclare
+    : workflowConstruct=IDENTIFIER
+      L_PAREN workflowParameters R_PAREN
+      GENERATES? workflowName=IDENTIFIER
+      L_BRACKET workflowType=typeElement R_BRACKET
     ;
 
-workflowSpec
-    : IDENTIFIER L_BRACKET typeElement R_BRACKET
+workflowParameters
+    : (parameterDecl (COMMA parameterDecl)* COMMA?)?
     ;
 
 workflowBlock
-    : L_CURLY workflowStatementList R_CURLY
-    ;
-
-workflowStatementList
     : prerequisteStatements nodesStatements directionStatements*
     ;
 

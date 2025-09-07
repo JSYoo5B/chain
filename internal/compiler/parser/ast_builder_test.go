@@ -20,7 +20,7 @@ func buildAstForTest(input string) *ast.ChainCode {
 
 	tree := parser.SourceFile()
 
-	builder := NewAstBuilder()
+	builder := NewAstBuilder(stream)
 	antlr.ParseTreeWalkerDefault.Walk(builder, tree)
 	return &builder.Result
 }
@@ -130,6 +130,136 @@ func TestAstBuilder_Import(t *testing.T) {
 			for i, imp := range result.Imports {
 				assert.Equal(t, tc.expected[i].Alias, imp.Alias)
 				assert.Equal(t, tc.expected[i].Path, imp.Path)
+			}
+		})
+	}
+}
+
+func TestAstBuilder_WorkflowDef(t *testing.T) {
+	type testCase struct {
+		declares []string
+		expected []ast.WorkflowDeclaration
+	}
+
+	testCases := map[string]testCase{
+		"simple constructor": {
+			declares: []string{`workflow helloWorld() generates HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: ""},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with single parameter constructors": {
+			declares: []string{`workflow helloWorld(name string) generates HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: "name string"},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with multiple parameter constructors": {
+			declares: []string{`workflow helloWorld(name string, age int) generates HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: "name string, age int"},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with parameter signature type reuse": {
+			declares: []string{`workflow helloWorld(firstName, lastName string) generates HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: "firstName, lastName string"},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with multiple generic type": {
+			declares: []string{`workflow helloWorld() generates HelloWorld[int8|int16]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: ""},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "int8|int16"},
+				},
+			},
+		},
+		"skip generates": {
+			declares: []string{`workflow helloWorld() HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: ""},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"multiple workflows": {
+			declares: []string{
+				`workflow helloWorld() generates HelloWorld[string]`,
+				`workflow goodByeWorld() generates GoodByeWorld[string]`,
+			},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: ""},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+				{
+					ConstructorName:   ast.CodeLocation{Text: "goodByeWorld"},
+					ConstructorParams: ast.CodeLocation{Text: ""},
+					WorkflowName:      ast.CodeLocation{Text: "GoodByeWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := strings.Join([]string{
+				`package chain_test`,
+				`import "github.com/JSYoo5B/chain"`,
+			}, "\n")
+
+			for _, declare := range tc.declares {
+				workflowDefine := strings.Join([]string{
+					fmt.Sprintf("%s {", declare),
+					"    prerequisite {",
+					"    }",
+					"    nodes:",
+					"        a, b, c",
+					"}",
+				}, "\n")
+				input += workflowDefine + "\n"
+			}
+
+			result := buildAstForTest(input)
+			require.Equal(t, "chain_test", result.Package.Name)
+			require.Len(t, result.Imports, 1)
+			require.Equal(t, "github.com/JSYoo5B/chain", result.Imports[0].Path)
+
+			assert.Len(t, result.Workflows, len(tc.expected))
+			for i, workflow := range result.Workflows {
+				assert.Equal(t, tc.expected[i].ConstructorName.Text, workflow.ConstructorName.Text)
+				assert.Equal(t, tc.expected[i].ConstructorParams.Text, workflow.ConstructorParams.Text)
+				assert.Equal(t, tc.expected[i].WorkflowName.Text, workflow.WorkflowName.Text)
+				assert.Equal(t, tc.expected[i].WorkflowType.Text, workflow.WorkflowType.Text)
 			}
 		})
 	}
