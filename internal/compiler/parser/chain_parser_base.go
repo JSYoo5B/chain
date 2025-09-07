@@ -128,3 +128,19 @@ func (p *ChainParserBase) isMethodExpr() bool {
 	}
 	return result
 }
+
+func (p *ChainParserBase) AreTokensContiguous(toks ...antlr.Token) bool {
+	if len(toks) < 2 {
+		return true
+	}
+
+	for i := 0; i < len(toks)-1; i++ {
+		if toks[i] == nil || toks[i+1] == nil {
+			return false
+		}
+		if toks[i].GetStop()+1 != toks[i+1].GetStart() {
+			return false
+		}
+	}
+	return true
+}
