@@ -11,30 +11,57 @@ options {
 import GoParser;
 
 sourceFile
-    : packageClause eos (importDecl eos)* (workflowDefine eos)* EOF
+    : packageClause eos (importDecl eos)* (workflowDecl eos)* EOF
     ;
 
-workflowDefine
-    : WORKFLOW workflowDeclare L_CURLY workflowBlock R_CURLY
+workflowDecl
+    : WORKFLOW workflowSignature L_CURLY workflowBody R_CURLY
     ;
 
-workflowDeclare
+workflowSignature
     : workflowConstruct=IDENTIFIER
-      L_PAREN workflowParameters R_PAREN
-      GENERATES? workflowName=IDENTIFIER
-      L_BRACKET workflowType=typeElement R_BRACKET
+        L_PAREN workflowParameters R_PAREN
+        GENERATES? workflowName=IDENTIFIER
+        L_BRACKET workflowType=typeElement R_BRACKET
+    ;
+
+workflowBody
+    : prerequisteBlock?
+        nodesBlock
+        (
+            successDirectionBlock
+            | errorDirectionBlock
+            | abortDirectionBlock
+            | branchDirectionBlock
+        )+
     ;
 
 workflowParameters
     : (parameterDecl (COMMA parameterDecl)* COMMA?)?
     ;
 
-workflowBlock
-    : prerequisteStatements nodesStatements directionStatements*
+prerequisteBlock
+    : PREREQUISITE L_CURLY prerequisiteStmt R_CURLY EOS*
     ;
 
-prerequisteStatements
-    : PREREQUISITE L_CURLY prerequisiteStmt R_CURLY EOS*
+nodesBlock
+    : NODES COLON nodeName (COMMA nodeName)+ chain_eos
+    ;
+
+successDirectionBlock
+    : SUCCESS COLON (directionStmt chain_eos?)+
+    ;
+
+errorDirectionBlock
+    : ERROR COLON (directionStmt chain_eos?)+
+    ;
+
+abortDirectionBlock
+    : ABORT COLON (directionStmt chain_eos?)+
+    ;
+
+branchDirectionBlock
+    : BRANCHES COLON (branchStmt chain_eos?)+
     ;
 
 prerequisiteStmt
@@ -58,52 +85,17 @@ golangEmbedStatement
     | deferStmt
     ;
 
-nodesStatements
-    : NODES COLON (nodeStmt eos)* EOS*
-    ;
-
-nodeStmt
-    : identifierList
-    ;
-
-directionStatements
-    : successStatements
-    | errorStatements
-    | abortStatements
-    | branchesStatements
-    ;
-
-successStatements
-    : SUCCESS COLON (directionStmt chain_eos?)+
-    ;
-
-errorStatements
-    : ERROR COLON (directionStmt chain_eos?)+
-    ;
-
-abortStatements
-    : ABORT COLON (directionStmt chain_eos?)+
-    ;
-
-branchesStatements
-    : BRANCHES COLON (branchStmt chain_eos?)+
-    ;
-
-directionStmt
-    : nodeName (direction = (L_TO_R | R_TO_L) nodeName)*
-    ;
-
 nodeName
     : END
     | IDENTIFIER
     ;
 
-branchStmt
-    : IDENTIFIER branchDirection nodeName
+directionStmt
+    : nodeName (direction = (L_TO_R | R_TO_L) nodeName)+
     ;
 
-branchDirection
-    : MINUS string_ MINUS GREATER
+branchStmt
+    : sourceNode=IDENTIFIER MINUS branchCond=string_ MINUS GREATER destNode=IDENTIFIER
     ;
 
 chain_eos

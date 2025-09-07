@@ -10,20 +10,35 @@ type ChainParserListener interface {
 	// EnterSourceFile is called when entering the sourceFile production.
 	EnterSourceFile(c *SourceFileContext)
 
-	// EnterWorkflowDefine is called when entering the workflowDefine production.
-	EnterWorkflowDefine(c *WorkflowDefineContext)
+	// EnterWorkflowDecl is called when entering the workflowDecl production.
+	EnterWorkflowDecl(c *WorkflowDeclContext)
 
-	// EnterWorkflowDeclare is called when entering the workflowDeclare production.
-	EnterWorkflowDeclare(c *WorkflowDeclareContext)
+	// EnterWorkflowSignature is called when entering the workflowSignature production.
+	EnterWorkflowSignature(c *WorkflowSignatureContext)
+
+	// EnterWorkflowBody is called when entering the workflowBody production.
+	EnterWorkflowBody(c *WorkflowBodyContext)
 
 	// EnterWorkflowParameters is called when entering the workflowParameters production.
 	EnterWorkflowParameters(c *WorkflowParametersContext)
 
-	// EnterWorkflowBlock is called when entering the workflowBlock production.
-	EnterWorkflowBlock(c *WorkflowBlockContext)
+	// EnterPrerequisteBlock is called when entering the prerequisteBlock production.
+	EnterPrerequisteBlock(c *PrerequisteBlockContext)
 
-	// EnterPrerequisteStatements is called when entering the prerequisteStatements production.
-	EnterPrerequisteStatements(c *PrerequisteStatementsContext)
+	// EnterNodesBlock is called when entering the nodesBlock production.
+	EnterNodesBlock(c *NodesBlockContext)
+
+	// EnterSuccessDirectionBlock is called when entering the successDirectionBlock production.
+	EnterSuccessDirectionBlock(c *SuccessDirectionBlockContext)
+
+	// EnterErrorDirectionBlock is called when entering the errorDirectionBlock production.
+	EnterErrorDirectionBlock(c *ErrorDirectionBlockContext)
+
+	// EnterAbortDirectionBlock is called when entering the abortDirectionBlock production.
+	EnterAbortDirectionBlock(c *AbortDirectionBlockContext)
+
+	// EnterBranchDirectionBlock is called when entering the branchDirectionBlock production.
+	EnterBranchDirectionBlock(c *BranchDirectionBlockContext)
 
 	// EnterPrerequisiteStmt is called when entering the prerequisiteStmt production.
 	EnterPrerequisiteStmt(c *PrerequisiteStmtContext)
@@ -31,38 +46,14 @@ type ChainParserListener interface {
 	// EnterGolangEmbedStatement is called when entering the golangEmbedStatement production.
 	EnterGolangEmbedStatement(c *GolangEmbedStatementContext)
 
-	// EnterNodesStatements is called when entering the nodesStatements production.
-	EnterNodesStatements(c *NodesStatementsContext)
-
-	// EnterNodeStmt is called when entering the nodeStmt production.
-	EnterNodeStmt(c *NodeStmtContext)
-
-	// EnterDirectionStatements is called when entering the directionStatements production.
-	EnterDirectionStatements(c *DirectionStatementsContext)
-
-	// EnterSuccessStatements is called when entering the successStatements production.
-	EnterSuccessStatements(c *SuccessStatementsContext)
-
-	// EnterErrorStatements is called when entering the errorStatements production.
-	EnterErrorStatements(c *ErrorStatementsContext)
-
-	// EnterAbortStatements is called when entering the abortStatements production.
-	EnterAbortStatements(c *AbortStatementsContext)
-
-	// EnterBranchesStatements is called when entering the branchesStatements production.
-	EnterBranchesStatements(c *BranchesStatementsContext)
+	// EnterNodeName is called when entering the nodeName production.
+	EnterNodeName(c *NodeNameContext)
 
 	// EnterDirectionStmt is called when entering the directionStmt production.
 	EnterDirectionStmt(c *DirectionStmtContext)
 
-	// EnterNodeName is called when entering the nodeName production.
-	EnterNodeName(c *NodeNameContext)
-
 	// EnterBranchStmt is called when entering the branchStmt production.
 	EnterBranchStmt(c *BranchStmtContext)
-
-	// EnterBranchDirection is called when entering the branchDirection production.
-	EnterBranchDirection(c *BranchDirectionContext)
 
 	// EnterChain_eos is called when entering the chain_eos production.
 	EnterChain_eos(c *Chain_eosContext)
@@ -385,20 +376,35 @@ type ChainParserListener interface {
 	// ExitSourceFile is called when exiting the sourceFile production.
 	ExitSourceFile(c *SourceFileContext)
 
-	// ExitWorkflowDefine is called when exiting the workflowDefine production.
-	ExitWorkflowDefine(c *WorkflowDefineContext)
+	// ExitWorkflowDecl is called when exiting the workflowDecl production.
+	ExitWorkflowDecl(c *WorkflowDeclContext)
 
-	// ExitWorkflowDeclare is called when exiting the workflowDeclare production.
-	ExitWorkflowDeclare(c *WorkflowDeclareContext)
+	// ExitWorkflowSignature is called when exiting the workflowSignature production.
+	ExitWorkflowSignature(c *WorkflowSignatureContext)
+
+	// ExitWorkflowBody is called when exiting the workflowBody production.
+	ExitWorkflowBody(c *WorkflowBodyContext)
 
 	// ExitWorkflowParameters is called when exiting the workflowParameters production.
 	ExitWorkflowParameters(c *WorkflowParametersContext)
 
-	// ExitWorkflowBlock is called when exiting the workflowBlock production.
-	ExitWorkflowBlock(c *WorkflowBlockContext)
+	// ExitPrerequisteBlock is called when exiting the prerequisteBlock production.
+	ExitPrerequisteBlock(c *PrerequisteBlockContext)
 
-	// ExitPrerequisteStatements is called when exiting the prerequisteStatements production.
-	ExitPrerequisteStatements(c *PrerequisteStatementsContext)
+	// ExitNodesBlock is called when exiting the nodesBlock production.
+	ExitNodesBlock(c *NodesBlockContext)
+
+	// ExitSuccessDirectionBlock is called when exiting the successDirectionBlock production.
+	ExitSuccessDirectionBlock(c *SuccessDirectionBlockContext)
+
+	// ExitErrorDirectionBlock is called when exiting the errorDirectionBlock production.
+	ExitErrorDirectionBlock(c *ErrorDirectionBlockContext)
+
+	// ExitAbortDirectionBlock is called when exiting the abortDirectionBlock production.
+	ExitAbortDirectionBlock(c *AbortDirectionBlockContext)
+
+	// ExitBranchDirectionBlock is called when exiting the branchDirectionBlock production.
+	ExitBranchDirectionBlock(c *BranchDirectionBlockContext)
 
 	// ExitPrerequisiteStmt is called when exiting the prerequisiteStmt production.
 	ExitPrerequisiteStmt(c *PrerequisiteStmtContext)
@@ -406,38 +412,14 @@ type ChainParserListener interface {
 	// ExitGolangEmbedStatement is called when exiting the golangEmbedStatement production.
 	ExitGolangEmbedStatement(c *GolangEmbedStatementContext)
 
-	// ExitNodesStatements is called when exiting the nodesStatements production.
-	ExitNodesStatements(c *NodesStatementsContext)
-
-	// ExitNodeStmt is called when exiting the nodeStmt production.
-	ExitNodeStmt(c *NodeStmtContext)
-
-	// ExitDirectionStatements is called when exiting the directionStatements production.
-	ExitDirectionStatements(c *DirectionStatementsContext)
-
-	// ExitSuccessStatements is called when exiting the successStatements production.
-	ExitSuccessStatements(c *SuccessStatementsContext)
-
-	// ExitErrorStatements is called when exiting the errorStatements production.
-	ExitErrorStatements(c *ErrorStatementsContext)
-
-	// ExitAbortStatements is called when exiting the abortStatements production.
-	ExitAbortStatements(c *AbortStatementsContext)
-
-	// ExitBranchesStatements is called when exiting the branchesStatements production.
-	ExitBranchesStatements(c *BranchesStatementsContext)
+	// ExitNodeName is called when exiting the nodeName production.
+	ExitNodeName(c *NodeNameContext)
 
 	// ExitDirectionStmt is called when exiting the directionStmt production.
 	ExitDirectionStmt(c *DirectionStmtContext)
 
-	// ExitNodeName is called when exiting the nodeName production.
-	ExitNodeName(c *NodeNameContext)
-
 	// ExitBranchStmt is called when exiting the branchStmt production.
 	ExitBranchStmt(c *BranchStmtContext)
-
-	// ExitBranchDirection is called when exiting the branchDirection production.
-	ExitBranchDirection(c *BranchDirectionContext)
 
 	// ExitChain_eos is called when exiting the chain_eos production.
 	ExitChain_eos(c *Chain_eosContext)

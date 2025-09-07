@@ -26,17 +26,23 @@ func (s *BaseChainParserListener) EnterSourceFile(ctx *SourceFileContext) {}
 // ExitSourceFile is called when production sourceFile is exited.
 func (s *BaseChainParserListener) ExitSourceFile(ctx *SourceFileContext) {}
 
-// EnterWorkflowDefine is called when production workflowDefine is entered.
-func (s *BaseChainParserListener) EnterWorkflowDefine(ctx *WorkflowDefineContext) {}
+// EnterWorkflowDecl is called when production workflowDecl is entered.
+func (s *BaseChainParserListener) EnterWorkflowDecl(ctx *WorkflowDeclContext) {}
 
-// ExitWorkflowDefine is called when production workflowDefine is exited.
-func (s *BaseChainParserListener) ExitWorkflowDefine(ctx *WorkflowDefineContext) {}
+// ExitWorkflowDecl is called when production workflowDecl is exited.
+func (s *BaseChainParserListener) ExitWorkflowDecl(ctx *WorkflowDeclContext) {}
 
-// EnterWorkflowDeclare is called when production workflowDeclare is entered.
-func (s *BaseChainParserListener) EnterWorkflowDeclare(ctx *WorkflowDeclareContext) {}
+// EnterWorkflowSignature is called when production workflowSignature is entered.
+func (s *BaseChainParserListener) EnterWorkflowSignature(ctx *WorkflowSignatureContext) {}
 
-// ExitWorkflowDeclare is called when production workflowDeclare is exited.
-func (s *BaseChainParserListener) ExitWorkflowDeclare(ctx *WorkflowDeclareContext) {}
+// ExitWorkflowSignature is called when production workflowSignature is exited.
+func (s *BaseChainParserListener) ExitWorkflowSignature(ctx *WorkflowSignatureContext) {}
+
+// EnterWorkflowBody is called when production workflowBody is entered.
+func (s *BaseChainParserListener) EnterWorkflowBody(ctx *WorkflowBodyContext) {}
+
+// ExitWorkflowBody is called when production workflowBody is exited.
+func (s *BaseChainParserListener) ExitWorkflowBody(ctx *WorkflowBodyContext) {}
 
 // EnterWorkflowParameters is called when production workflowParameters is entered.
 func (s *BaseChainParserListener) EnterWorkflowParameters(ctx *WorkflowParametersContext) {}
@@ -44,17 +50,41 @@ func (s *BaseChainParserListener) EnterWorkflowParameters(ctx *WorkflowParameter
 // ExitWorkflowParameters is called when production workflowParameters is exited.
 func (s *BaseChainParserListener) ExitWorkflowParameters(ctx *WorkflowParametersContext) {}
 
-// EnterWorkflowBlock is called when production workflowBlock is entered.
-func (s *BaseChainParserListener) EnterWorkflowBlock(ctx *WorkflowBlockContext) {}
+// EnterPrerequisteBlock is called when production prerequisteBlock is entered.
+func (s *BaseChainParserListener) EnterPrerequisteBlock(ctx *PrerequisteBlockContext) {}
 
-// ExitWorkflowBlock is called when production workflowBlock is exited.
-func (s *BaseChainParserListener) ExitWorkflowBlock(ctx *WorkflowBlockContext) {}
+// ExitPrerequisteBlock is called when production prerequisteBlock is exited.
+func (s *BaseChainParserListener) ExitPrerequisteBlock(ctx *PrerequisteBlockContext) {}
 
-// EnterPrerequisteStatements is called when production prerequisteStatements is entered.
-func (s *BaseChainParserListener) EnterPrerequisteStatements(ctx *PrerequisteStatementsContext) {}
+// EnterNodesBlock is called when production nodesBlock is entered.
+func (s *BaseChainParserListener) EnterNodesBlock(ctx *NodesBlockContext) {}
 
-// ExitPrerequisteStatements is called when production prerequisteStatements is exited.
-func (s *BaseChainParserListener) ExitPrerequisteStatements(ctx *PrerequisteStatementsContext) {}
+// ExitNodesBlock is called when production nodesBlock is exited.
+func (s *BaseChainParserListener) ExitNodesBlock(ctx *NodesBlockContext) {}
+
+// EnterSuccessDirectionBlock is called when production successDirectionBlock is entered.
+func (s *BaseChainParserListener) EnterSuccessDirectionBlock(ctx *SuccessDirectionBlockContext) {}
+
+// ExitSuccessDirectionBlock is called when production successDirectionBlock is exited.
+func (s *BaseChainParserListener) ExitSuccessDirectionBlock(ctx *SuccessDirectionBlockContext) {}
+
+// EnterErrorDirectionBlock is called when production errorDirectionBlock is entered.
+func (s *BaseChainParserListener) EnterErrorDirectionBlock(ctx *ErrorDirectionBlockContext) {}
+
+// ExitErrorDirectionBlock is called when production errorDirectionBlock is exited.
+func (s *BaseChainParserListener) ExitErrorDirectionBlock(ctx *ErrorDirectionBlockContext) {}
+
+// EnterAbortDirectionBlock is called when production abortDirectionBlock is entered.
+func (s *BaseChainParserListener) EnterAbortDirectionBlock(ctx *AbortDirectionBlockContext) {}
+
+// ExitAbortDirectionBlock is called when production abortDirectionBlock is exited.
+func (s *BaseChainParserListener) ExitAbortDirectionBlock(ctx *AbortDirectionBlockContext) {}
+
+// EnterBranchDirectionBlock is called when production branchDirectionBlock is entered.
+func (s *BaseChainParserListener) EnterBranchDirectionBlock(ctx *BranchDirectionBlockContext) {}
+
+// ExitBranchDirectionBlock is called when production branchDirectionBlock is exited.
+func (s *BaseChainParserListener) ExitBranchDirectionBlock(ctx *BranchDirectionBlockContext) {}
 
 // EnterPrerequisiteStmt is called when production prerequisiteStmt is entered.
 func (s *BaseChainParserListener) EnterPrerequisiteStmt(ctx *PrerequisiteStmtContext) {}
@@ -68,47 +98,11 @@ func (s *BaseChainParserListener) EnterGolangEmbedStatement(ctx *GolangEmbedStat
 // ExitGolangEmbedStatement is called when production golangEmbedStatement is exited.
 func (s *BaseChainParserListener) ExitGolangEmbedStatement(ctx *GolangEmbedStatementContext) {}
 
-// EnterNodesStatements is called when production nodesStatements is entered.
-func (s *BaseChainParserListener) EnterNodesStatements(ctx *NodesStatementsContext) {}
+// EnterNodeName is called when production nodeName is entered.
+func (s *BaseChainParserListener) EnterNodeName(ctx *NodeNameContext) {}
 
-// ExitNodesStatements is called when production nodesStatements is exited.
-func (s *BaseChainParserListener) ExitNodesStatements(ctx *NodesStatementsContext) {}
-
-// EnterNodeStmt is called when production nodeStmt is entered.
-func (s *BaseChainParserListener) EnterNodeStmt(ctx *NodeStmtContext) {}
-
-// ExitNodeStmt is called when production nodeStmt is exited.
-func (s *BaseChainParserListener) ExitNodeStmt(ctx *NodeStmtContext) {}
-
-// EnterDirectionStatements is called when production directionStatements is entered.
-func (s *BaseChainParserListener) EnterDirectionStatements(ctx *DirectionStatementsContext) {}
-
-// ExitDirectionStatements is called when production directionStatements is exited.
-func (s *BaseChainParserListener) ExitDirectionStatements(ctx *DirectionStatementsContext) {}
-
-// EnterSuccessStatements is called when production successStatements is entered.
-func (s *BaseChainParserListener) EnterSuccessStatements(ctx *SuccessStatementsContext) {}
-
-// ExitSuccessStatements is called when production successStatements is exited.
-func (s *BaseChainParserListener) ExitSuccessStatements(ctx *SuccessStatementsContext) {}
-
-// EnterErrorStatements is called when production errorStatements is entered.
-func (s *BaseChainParserListener) EnterErrorStatements(ctx *ErrorStatementsContext) {}
-
-// ExitErrorStatements is called when production errorStatements is exited.
-func (s *BaseChainParserListener) ExitErrorStatements(ctx *ErrorStatementsContext) {}
-
-// EnterAbortStatements is called when production abortStatements is entered.
-func (s *BaseChainParserListener) EnterAbortStatements(ctx *AbortStatementsContext) {}
-
-// ExitAbortStatements is called when production abortStatements is exited.
-func (s *BaseChainParserListener) ExitAbortStatements(ctx *AbortStatementsContext) {}
-
-// EnterBranchesStatements is called when production branchesStatements is entered.
-func (s *BaseChainParserListener) EnterBranchesStatements(ctx *BranchesStatementsContext) {}
-
-// ExitBranchesStatements is called when production branchesStatements is exited.
-func (s *BaseChainParserListener) ExitBranchesStatements(ctx *BranchesStatementsContext) {}
+// ExitNodeName is called when production nodeName is exited.
+func (s *BaseChainParserListener) ExitNodeName(ctx *NodeNameContext) {}
 
 // EnterDirectionStmt is called when production directionStmt is entered.
 func (s *BaseChainParserListener) EnterDirectionStmt(ctx *DirectionStmtContext) {}
@@ -116,23 +110,11 @@ func (s *BaseChainParserListener) EnterDirectionStmt(ctx *DirectionStmtContext) 
 // ExitDirectionStmt is called when production directionStmt is exited.
 func (s *BaseChainParserListener) ExitDirectionStmt(ctx *DirectionStmtContext) {}
 
-// EnterNodeName is called when production nodeName is entered.
-func (s *BaseChainParserListener) EnterNodeName(ctx *NodeNameContext) {}
-
-// ExitNodeName is called when production nodeName is exited.
-func (s *BaseChainParserListener) ExitNodeName(ctx *NodeNameContext) {}
-
 // EnterBranchStmt is called when production branchStmt is entered.
 func (s *BaseChainParserListener) EnterBranchStmt(ctx *BranchStmtContext) {}
 
 // ExitBranchStmt is called when production branchStmt is exited.
 func (s *BaseChainParserListener) ExitBranchStmt(ctx *BranchStmtContext) {}
-
-// EnterBranchDirection is called when production branchDirection is entered.
-func (s *BaseChainParserListener) EnterBranchDirection(ctx *BranchDirectionContext) {}
-
-// ExitBranchDirection is called when production branchDirection is exited.
-func (s *BaseChainParserListener) ExitBranchDirection(ctx *BranchDirectionContext) {}
 
 // EnterChain_eos is called when production chain_eos is entered.
 func (s *BaseChainParserListener) EnterChain_eos(ctx *Chain_eosContext) {}

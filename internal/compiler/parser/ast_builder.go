@@ -56,7 +56,7 @@ func (a *AstBuilder) EnterImportSpec(ctx *ImportSpecContext) {
 	a.Result.Imports = append(a.Result.Imports, imp)
 }
 
-func (a *AstBuilder) EnterWorkflowDefine(ctx *WorkflowDefineContext) {
+func (a *AstBuilder) EnterWorkflowDecl(ctx *WorkflowDeclContext) {
 	startToken := ctx.GetStart()
 
 	workflow := ast.WorkflowStatement{
@@ -66,12 +66,12 @@ func (a *AstBuilder) EnterWorkflowDefine(ctx *WorkflowDefineContext) {
 	a.currentWorkflow = &workflow
 }
 
-func (a *AstBuilder) ExitWorkflowDefine(_ *WorkflowDefineContext) {
+func (a *AstBuilder) ExitWorkflowDecl(_ *WorkflowDeclContext) {
 	a.Result.Workflows = append(a.Result.Workflows, *a.currentWorkflow)
 	a.currentWorkflow = nil
 }
 
-func (a *AstBuilder) EnterWorkflowDeclare(ctx *WorkflowDeclareContext) {
+func (a *AstBuilder) EnterWorkflowSignature(ctx *WorkflowSignatureContext) {
 	if a.currentWorkflow == nil {
 		return
 	}
