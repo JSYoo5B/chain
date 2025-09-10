@@ -95,8 +95,7 @@ directionStmt
     ;
 
 branchStmt
-    : sourceNode=IDENTIFIER m1=MINUS branchCond=string_ m2=MINUS g=GREATER destNode=IDENTIFIER
-    { this.AreTokensContiguous($m1, $branchCond.start) && this.AreTokensContiguous($branchCond.stop, $m2, $g) }?
+    : sourceNode=IDENTIFIER  branchCond=BRANCH_DIR destNode=IDENTIFIER
     ;
 
 chain_eos

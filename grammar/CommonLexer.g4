@@ -140,6 +140,7 @@ RECEIVE   : '<-';
 // Chain custom operators
 L_TO_R: '-->';
 R_TO_L: '<--';
+BRANCH_DIR: MINUS (RAW_STRING_LIT|INTERPRETED_STRING_LIT) MINUS GREATER;
 
 // Number literals
 
