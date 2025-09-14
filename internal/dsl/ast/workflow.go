@@ -18,7 +18,7 @@ type WorkflowDeclaration struct {
 }
 
 type WorkflowDefinition struct {
-	Prerequisite PrerequisiteBlock
+	PrerequisiteBlock
 	NodesBlock
 
 	Branches  []BranchStatement

@@ -114,7 +114,7 @@ func (a *AstBuilder) EnterPrerequisiteBlock(ctx *PrerequisiteBlockContext) {
 	text := strings.TrimPrefix(textWithBlock, "{")
 	text = strings.TrimSuffix(text, "}")
 
-	a.currentWorkflow.Prerequisite = ast.PrerequisiteBlock{
+	a.currentWorkflow.PrerequisiteBlock = ast.PrerequisiteBlock{
 		Code: text,
 		CodeLocation: ast.CodeLocation{
 			Line:   start.GetLine(),

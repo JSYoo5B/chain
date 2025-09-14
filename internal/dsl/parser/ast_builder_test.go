@@ -34,7 +34,7 @@ func TestAstBuilder_Package(t *testing.T) {
 	fmt.Println(result)
 }
 
-func TestAstBuilder_Import(t *testing.T) {
+func TestAstBuilder_Imports(t *testing.T) {
 	type testCase struct {
 		importLine string
 		expected   []ast.Import
@@ -119,7 +119,10 @@ func TestAstBuilder_Import(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			input := fmt.Sprintf("package chain_test\n%s", tc.importLine)
+			input := strings.Join([]string{
+				"package chain_test",
+				tc.importLine,
+			}, "\n")
 
 			result := buildAstForTest(input)
 			require.Equal(t, "chain_test", result.Package.Name)
@@ -133,7 +136,7 @@ func TestAstBuilder_Import(t *testing.T) {
 	}
 }
 
-func TestAstBuilder_WorkflowDef(t *testing.T) {
+func TestAstBuilder_WorkflowSignature(t *testing.T) {
 	type testCase struct {
 		declares []string
 		expected []ast.WorkflowDeclaration
@@ -227,8 +230,6 @@ func TestAstBuilder_WorkflowDef(t *testing.T) {
 			for _, declare := range tc.declares {
 				workflowDefine := strings.Join([]string{
 					fmt.Sprintf("%s {", declare),
-					"    prerequisite {",
-					"    }",
 					"    nodes:",
 					"        a, b, c",
 					"}",
@@ -354,7 +355,7 @@ func TestAstBuilder_PrerequisiteBlock(t *testing.T) {
 
 			assert.Equal(t,
 				strings.Trim(tc.prerequisite, " \t\n"),
-				strings.Trim(result.Workflows[0].Prerequisite.Code, " \t\n"))
+				strings.Trim(result.Workflows[0].PrerequisiteBlock.Code, " \t\n"))
 		})
 	}
 }
@@ -432,7 +433,7 @@ func TestAstBuilder_PrerequisiteBlock_multiple(t *testing.T) {
 				assert.Equal(t, fmt.Sprintf("WF%d", i), workflow.WorkflowName.Text)
 				assert.Equal(t,
 					strings.Trim(tc.prerequisites[i], " \t\n"),
-					strings.Trim(workflow.Prerequisite.Code, " \t\n"))
+					strings.Trim(workflow.PrerequisiteBlock.Code, " \t\n"))
 			}
 		})
 	}
@@ -488,8 +489,6 @@ func TestAstBuilder_NodesBlock(t *testing.T) {
 				`import "github.com/JSYoo5B/chain"`,
 				``,
 				`workflow helloworld() HelloWorld[string] {`,
-				`    prerequisite {`,
-				`    }`,
 				`    nodes:`,
 				tc.nodesCode,
 				`}`,
@@ -584,8 +583,6 @@ func TestAstBuilder_Directions(t *testing.T) {
 				`import "github.com/JSYoo5B/chain"`,
 				``,
 				`workflow helloworld() HelloWorld[string] {`,
-				`    prerequisite {`,
-				`    }`,
 				`    nodes:`,
 				`        a, b, c`,
 				`    success:`,
