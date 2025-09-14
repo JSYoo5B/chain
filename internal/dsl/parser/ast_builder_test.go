@@ -508,3 +508,122 @@ func TestAstBuilder_NodesBlock(t *testing.T) {
 		})
 	}
 }
+
+func TestAstBuilder_Directions(t *testing.T) {
+	type testCase struct {
+		directionBlock string
+		directions     []ast.DirectionStatement
+	}
+
+	testCases := map[string]testCase{
+		"left to right": {
+			directionBlock: `hello --> end`,
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "end"},
+			},
+		},
+		"right to left": {
+			directionBlock: `end <-- hello`,
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "end"},
+			},
+		},
+		"no-spaces": {
+			directionBlock: `hello-->world`,
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "world"},
+			},
+		},
+		"left to right chain": {
+			directionBlock: `hello --> world --> end`,
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "world"},
+				{FromNode: "world", ToNode: "end"},
+			},
+		},
+		"right to left chain": {
+			directionBlock: `end <-- world <-- hello`,
+			directions: []ast.DirectionStatement{
+				{FromNode: "world", ToNode: "end"},
+				{FromNode: "hello", ToNode: "world"},
+			},
+		},
+		"direction combined": {
+			directionBlock: `hello --> end <-- world`,
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "end"},
+				{FromNode: "world", ToNode: "end"},
+			},
+		},
+		"multi-lined direction": {
+			directionBlock: strings.Join([]string{
+				`hello --> world -->`,
+				`end`,
+			}, "\n"),
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "world"},
+				{FromNode: "world", ToNode: "end"},
+			},
+		},
+		"multi direction lines": {
+			directionBlock: strings.Join([]string{
+				`hello --> world`,
+				`world --> end`,
+			}, "\n"),
+			directions: []ast.DirectionStatement{
+				{FromNode: "hello", ToNode: "world"},
+				{FromNode: "world", ToNode: "end"},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := strings.Join([]string{
+				`package chain_test`,
+				`import "github.com/JSYoo5B/chain"`,
+				``,
+				`workflow helloworld() HelloWorld[string] {`,
+				`    prerequisite {`,
+				`    }`,
+				`    nodes:`,
+				`        a, b, c`,
+				`    success:`,
+				tc.directionBlock,
+				`    error:`,
+				tc.directionBlock,
+				`    abort:`,
+				tc.directionBlock,
+				`}`,
+			}, "\n")
+
+			result := buildAstForTest(input)
+			require.Equal(t, "chain_test", result.Package.Name)
+			require.Len(t, result.Imports, 1)
+			require.Equal(t, "github.com/JSYoo5B/chain", result.Imports[0].Path)
+			require.Len(t, result.Workflows, 1)
+			require.Len(t, result.Workflows[0].NodesBlock.Nodes, 3)
+
+			resultDirections := result.Workflows[0].Successes
+			assert.Len(t, resultDirections, len(tc.directions))
+			for i, direction := range resultDirections {
+				assert.Equal(t, tc.directions[i].FromNode, direction.FromNode)
+				assert.Equal(t, tc.directions[i].ToNode, direction.ToNode)
+			}
+
+			resultDirections = result.Workflows[0].Errors
+			assert.Len(t, resultDirections, len(tc.directions))
+			for i, direction := range resultDirections {
+				assert.Equal(t, tc.directions[i].FromNode, direction.FromNode)
+				assert.Equal(t, tc.directions[i].ToNode, direction.ToNode)
+			}
+
+			resultDirections = result.Workflows[0].Aborts
+			assert.Len(t, resultDirections, len(tc.directions))
+			for i, direction := range resultDirections {
+				assert.Equal(t, tc.directions[i].FromNode, direction.FromNode)
+				assert.Equal(t, tc.directions[i].ToNode, direction.ToNode)
+			}
+		})
+	}
+}

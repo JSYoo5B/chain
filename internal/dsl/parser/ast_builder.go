@@ -144,3 +144,59 @@ func (a *AstBuilder) EnterNodesBlock(ctx *NodesBlockContext) {
 		CodeLocation: newCodeLocationFromToken(startToken),
 	}
 }
+
+func (a *AstBuilder) EnterSuccessDirectionBlock(ctx *SuccessDirectionBlockContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	allDirectionStatements := ctx.AllDirectionStmt()
+	for _, directionStmt := range allDirectionStatements {
+		a.currentWorkflow.Successes = append(a.currentWorkflow.Successes, parseDirections(directionStmt)...)
+	}
+}
+
+func (a *AstBuilder) EnterErrorDirectionBlock(ctx *ErrorDirectionBlockContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	allDirectionStatements := ctx.AllDirectionStmt()
+	for _, directionStmt := range allDirectionStatements {
+		a.currentWorkflow.Errors = append(a.currentWorkflow.Errors, parseDirections(directionStmt)...)
+	}
+}
+
+func (a *AstBuilder) EnterAbortDirectionBlock(ctx *AbortDirectionBlockContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	allDirectionStatements := ctx.AllDirectionStmt()
+	for _, directionStmt := range allDirectionStatements {
+		a.currentWorkflow.Aborts = append(a.currentWorkflow.Aborts, parseDirections(directionStmt)...)
+	}
+}
+
+func parseDirections(directionStatement IDirectionStmtContext) []ast.DirectionStatement {
+	nodes, edges := directionStatement.AllNodeName(), directionStatement.AllEdgeDirection()
+	directions := make([]ast.DirectionStatement, 0, len(edges))
+
+	for i, edge := range edges {
+		var from, to string
+		left, right := nodes[i], nodes[i+1]
+		if edge.GetText() == "-->" {
+			from, to = left.GetText(), right.GetText()
+		} else if edge.GetText() == "<--" {
+			from, to = right.GetText(), left.GetText()
+		}
+		direction := ast.DirectionStatement{
+			FromNode:     from,
+			ToNode:       to,
+			CodeLocation: newCodeLocationFromToken(left.GetStart()),
+		}
+		directions = append(directions, direction)
+	}
+
+	return directions
+}

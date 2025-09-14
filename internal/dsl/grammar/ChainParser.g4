@@ -91,7 +91,11 @@ nodeName
     ;
 
 directionStmt
-    : nodeName (direction = (L_TO_R | R_TO_L) nodeName)+
+    : nodeName (edgeDirection nodeName)+
+    ;
+
+edgeDirection
+    : L_TO_R | R_TO_L
     ;
 
 branchStmt

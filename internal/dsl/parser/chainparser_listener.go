@@ -52,6 +52,9 @@ type ChainParserListener interface {
 	// EnterDirectionStmt is called when entering the directionStmt production.
 	EnterDirectionStmt(c *DirectionStmtContext)
 
+	// EnterEdgeDirection is called when entering the edgeDirection production.
+	EnterEdgeDirection(c *EdgeDirectionContext)
+
 	// EnterBranchStmt is called when entering the branchStmt production.
 	EnterBranchStmt(c *BranchStmtContext)
 
@@ -417,6 +420,9 @@ type ChainParserListener interface {
 
 	// ExitDirectionStmt is called when exiting the directionStmt production.
 	ExitDirectionStmt(c *DirectionStmtContext)
+
+	// ExitEdgeDirection is called when exiting the edgeDirection production.
+	ExitEdgeDirection(c *EdgeDirectionContext)
 
 	// ExitBranchStmt is called when exiting the branchStmt production.
 	ExitBranchStmt(c *BranchStmtContext)

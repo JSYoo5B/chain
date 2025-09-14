@@ -110,6 +110,12 @@ func (s *BaseChainParserListener) EnterDirectionStmt(ctx *DirectionStmtContext) 
 // ExitDirectionStmt is called when production directionStmt is exited.
 func (s *BaseChainParserListener) ExitDirectionStmt(ctx *DirectionStmtContext) {}
 
+// EnterEdgeDirection is called when production edgeDirection is entered.
+func (s *BaseChainParserListener) EnterEdgeDirection(ctx *EdgeDirectionContext) {}
+
+// ExitEdgeDirection is called when production edgeDirection is exited.
+func (s *BaseChainParserListener) ExitEdgeDirection(ctx *EdgeDirectionContext) {}
+
 // EnterBranchStmt is called when production branchStmt is entered.
 func (s *BaseChainParserListener) EnterBranchStmt(ctx *BranchStmtContext) {}
 
