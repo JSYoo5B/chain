@@ -2,7 +2,7 @@ package semantic
 
 import (
 	"embed"
-	"github.com/JSYoo5B/chain/internal/compiler/parser"
+	"github.com/JSYoo5B/chain/internal/dsl/parser"
 	"github.com/antlr4-go/antlr/v4"
 	"io/fs"
 	"testing"

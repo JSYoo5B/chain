@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"github.com/JSYoo5B/chain/internal/compiler/ast"
+	"github.com/JSYoo5B/chain/internal/dsl/ast"
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
