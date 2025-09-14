@@ -50,11 +50,11 @@ func (s *BaseChainParserListener) EnterWorkflowParameters(ctx *WorkflowParameter
 // ExitWorkflowParameters is called when production workflowParameters is exited.
 func (s *BaseChainParserListener) ExitWorkflowParameters(ctx *WorkflowParametersContext) {}
 
-// EnterPrerequisteBlock is called when production prerequisteBlock is entered.
-func (s *BaseChainParserListener) EnterPrerequisteBlock(ctx *PrerequisteBlockContext) {}
+// EnterPrerequisiteBlock is called when production prerequisiteBlock is entered.
+func (s *BaseChainParserListener) EnterPrerequisiteBlock(ctx *PrerequisiteBlockContext) {}
 
-// ExitPrerequisteBlock is called when production prerequisteBlock is exited.
-func (s *BaseChainParserListener) ExitPrerequisteBlock(ctx *PrerequisteBlockContext) {}
+// ExitPrerequisiteBlock is called when production prerequisiteBlock is exited.
+func (s *BaseChainParserListener) ExitPrerequisiteBlock(ctx *PrerequisiteBlockContext) {}
 
 // EnterNodesBlock is called when production nodesBlock is entered.
 func (s *BaseChainParserListener) EnterNodesBlock(ctx *NodesBlockContext) {}

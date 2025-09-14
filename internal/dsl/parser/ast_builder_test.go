@@ -94,24 +94,22 @@ func TestAstBuilder_Import(t *testing.T) {
 			},
 		},
 		"blocked multi import": {
-			importLine: strings.Join(
-				[]string{
-					`import (`,
-					`    "context"`,
-					`    "fmt"`,
-					`)`,
-				}, "\n"),
+			importLine: strings.Join([]string{
+				`import (`,
+				`    "context"`,
+				`    "fmt"`,
+				`)`,
+			}, "\n"),
 			expected: []ast.Import{
 				{Alias: "context", Path: "context"},
 				{Alias: "fmt", Path: "fmt"},
 			},
 		},
 		"unblocked multi import": {
-			importLine: strings.Join(
-				[]string{
-					`import "context"`,
-					`import "fmt"`,
-				}, "\n"),
+			importLine: strings.Join([]string{
+				`import "context"`,
+				`import "fmt"`,
+			}, "\n"),
 			expected: []ast.Import{
 				{Alias: "context", Path: "context"},
 				{Alias: "fmt", Path: "fmt"},
@@ -176,11 +174,11 @@ func TestAstBuilder_WorkflowDef(t *testing.T) {
 			},
 		},
 		"with parameter signature type reuse": {
-			declares: []string{`workflow helloWorld(firstName, lastName string) generates HelloWorld[string]`},
+			declares: []string{`workflow helloWorld(first, last string) generates HelloWorld[string]`},
 			expected: []ast.WorkflowDeclaration{
 				{
 					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
-					ConstructorParams: ast.CodeLocation{Text: "firstName, lastName string"},
+					ConstructorParams: ast.CodeLocation{Text: "first, last string"},
 					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
 					WorkflowType:      ast.CodeLocation{Text: "string"},
 				},
@@ -260,6 +258,192 @@ func TestAstBuilder_WorkflowDef(t *testing.T) {
 				assert.Equal(t, tc.expected[i].ConstructorParams.Text, workflow.ConstructorParams.Text)
 				assert.Equal(t, tc.expected[i].WorkflowName.Text, workflow.WorkflowName.Text)
 				assert.Equal(t, tc.expected[i].WorkflowType.Text, workflow.WorkflowType.Text)
+			}
+		})
+	}
+}
+
+func TestAstBuilder_PrerequisiteBlock(t *testing.T) {
+	type testCase struct {
+		prerequisite string
+	}
+
+	testCases := map[string]testCase{
+		"empty golang code": {
+			prerequisite: ``,
+		},
+		"simple hello world": {
+			prerequisite: strings.Join([]string{
+				`hello := printAction("hello")`,
+				`world := printAction("world")`,
+			}, "\n"),
+		},
+		"package symbol": {
+			prerequisite: `action := chain.NewSimpleAction()`,
+		},
+		"comment in front": {
+			prerequisite: strings.Join([]string{
+				`// comment in prerequisite`,
+				`action := chain.NewSimpleAction()`,
+			}, "\n"),
+		},
+		"comment in end": {
+			prerequisite: strings.Join([]string{
+				`action := chain.NewSimpleAction()`,
+				`// comment in prerequisite`,
+			}, "\n"),
+		},
+		"single-line closure": {
+			prerequisite: `closure := func(_ context.Context, i int) (int, error) { return i, nil }`,
+		},
+		"multi-line closure": {
+			prerequisite: strings.Join([]string{
+				`closure := func(_ context.Context, i int) (int, error) {`,
+				`    return i, nil`,
+				`}`,
+			}, "\n"),
+		},
+		"multi-line parameters": {
+			prerequisite: strings.Join([]string{
+				`a := chain.NewSimpleAction(`,
+				`    "test",`,
+				`    someFunc,`,
+				`)`,
+			}, "\n"),
+		},
+		"if statement": {
+			prerequisite: strings.Join([]string{
+				`if true {`,
+				`    a := chain.NewSimpleAction()`,
+				`}`,
+			}, "\n"),
+		},
+		"struct literal": {
+			prerequisite: strings.Join([]string{
+				`a := printAction{`,
+				`    member: Member`,
+				`}`,
+			}, "\n"),
+		},
+		"string contains curly": {
+			prerequisite: `a := "{\"number\": 123}"`,
+		},
+		"string contains incomplete curly": {
+			prerequisite: `a := "{\"number\": 123"`,
+		},
+		"string contains inline-comment": {
+			prerequisite: `a := "//comment"`,
+		},
+		"string contains comment block": {
+			prerequisite: `a := "/*comment*/"`,
+		},
+		"variable declaration": {
+			prerequisite: `var action Action[int]`,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := strings.Join([]string{
+				`package chain_test`,
+				`import "github.com/JSYoo5B/chain"`,
+				``,
+				`workflow helloworld() HelloWorld[string] {`,
+				`    prerequisite {`,
+				tc.prerequisite,
+				`    }`,
+				`    nodes:`,
+				`        a, b, c`,
+				`}`,
+			}, "\n")
+
+			result := buildAstForTest(input)
+			require.Equal(t, "chain_test", result.Package.Name)
+			require.Len(t, result.Imports, 1)
+			require.Equal(t, "github.com/JSYoo5B/chain", result.Imports[0].Path)
+			require.Len(t, result.Workflows, 1)
+
+			assert.Equal(t,
+				strings.Trim(tc.prerequisite, " \t\n"),
+				strings.Trim(result.Workflows[0].Prerequisite.Code, " \t\n"))
+		})
+	}
+}
+
+func TestAstBuilder_PrerequisiteBlock_multiple(t *testing.T) {
+	type testCase struct {
+		prerequisites []string
+	}
+
+	testCases := map[string]testCase{
+		"two blocks": {
+			prerequisites: []string{
+				``,
+				`action := chain.NewSimpleAction()`,
+			},
+		},
+		"three blocks": {
+			prerequisites: []string{
+				`a := "{\"number\": 123}"`,
+				`closure := func(_ context.Context, i int) (int, error) { return i, nil }`,
+				`action := chain.NewSimpleAction()`,
+			},
+		},
+		"same blocks": {
+			prerequisites: []string{
+				`a := "//comment"`,
+				`a := "//comment"`,
+				`a := "//comment"`,
+				`a := "//comment"`,
+			},
+		},
+		"some has multi-line": {
+			prerequisites: []string{
+				strings.Join([]string{
+					`if true {`,
+					`    a := chain.NewSimpleAction()`,
+					`}`,
+				}, "\n"),
+				strings.Join([]string{
+					`closure := func(_ context.Context, i int) (int, error) {`,
+					`    return i, nil`,
+					`}`,
+				}, "\n"),
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := strings.Join([]string{
+				`package chain_test`,
+				`import "github.com/JSYoo5B/chain"`,
+			}, "\n")
+
+			for i, prerequisite := range tc.prerequisites {
+				workflowDefine := strings.Join([]string{
+					fmt.Sprintf("workflow wf%d() WF%d[string] {", i, i),
+					"    prerequisite {",
+					prerequisite,
+					"    }",
+					"    nodes:",
+					"        a, b, c",
+					"}",
+				}, "\n")
+				input += workflowDefine + "\n"
+			}
+
+			result := buildAstForTest(input)
+			require.Equal(t, "chain_test", result.Package.Name)
+			require.Len(t, result.Imports, 1)
+			require.Equal(t, "github.com/JSYoo5B/chain", result.Imports[0].Path)
+
+			assert.Len(t, result.Workflows, len(tc.prerequisites))
+			for i, workflow := range result.Workflows {
+				assert.Equal(t, fmt.Sprintf("WF%d", i), workflow.WorkflowName.Text)
+				assert.Equal(t,
+					strings.Trim(tc.prerequisites[i], " \t\n"),
+					strings.Trim(workflow.Prerequisite.Code, " \t\n"))
 			}
 		})
 	}

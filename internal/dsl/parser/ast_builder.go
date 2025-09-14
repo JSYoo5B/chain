@@ -4,11 +4,12 @@ import (
 	"github.com/JSYoo5B/chain/internal/dsl/ast"
 	"github.com/antlr4-go/antlr/v4"
 	"strconv"
+	"strings"
 )
 
 type AstBuilder struct {
 	*BaseChainParserListener
-	tokenStream antlr.TokenStream
+	rawTextStream antlr.TokenStream
 
 	Result          ast.ChainCode
 	currentWorkflow *ast.WorkflowStatement
@@ -17,7 +18,7 @@ type AstBuilder struct {
 func NewAstBuilder(stream antlr.TokenStream) *AstBuilder {
 	return &AstBuilder{
 		BaseChainParserListener: &BaseChainParserListener{},
-		tokenStream:             stream,
+		rawTextStream:           stream,
 		Result:                  ast.ChainCode{},
 		currentWorkflow:         nil,
 	}
@@ -79,10 +80,10 @@ func (a *AstBuilder) EnterWorkflowSignature(ctx *WorkflowSignatureContext) {
 	startToken := ctx.GetStart()
 
 	paramStart, paramEnd := ctx.WorkflowParameters().GetStart(), ctx.WorkflowParameters().GetStop()
-	paramText := a.tokenStream.GetTextFromTokens(paramStart, paramEnd)
+	paramText := a.rawTextStream.GetTextFromTokens(paramStart, paramEnd)
 
 	typeStart, typeEnd := ctx.GetWorkflowType().GetStart(), ctx.GetWorkflowType().GetStop()
-	typeText := a.tokenStream.GetTextFromTokens(typeStart, typeEnd)
+	typeText := a.rawTextStream.GetTextFromTokens(typeStart, typeEnd)
 
 	declare := ast.WorkflowDeclaration{
 		ConstructorName: newCodeLocationFromToken(ctx.GetWorkflowConstruct()),
@@ -101,4 +102,24 @@ func (a *AstBuilder) EnterWorkflowSignature(ctx *WorkflowSignatureContext) {
 	}
 
 	a.currentWorkflow.WorkflowDeclaration = declare
+}
+
+func (a *AstBuilder) EnterPrerequisiteBlock(ctx *PrerequisiteBlockContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	start, end := ctx.L_CURLY().GetSymbol(), ctx.R_CURLY().GetSymbol()
+	textWithBlock := a.rawTextStream.GetTextFromTokens(start, end)
+	text := strings.TrimPrefix(textWithBlock, "{")
+	text = strings.TrimSuffix(text, "}")
+
+	a.currentWorkflow.Prerequisite = ast.PrerequisiteBlock{
+		Code: text,
+		CodeLocation: ast.CodeLocation{
+			Line:   start.GetLine(),
+			Column: start.GetColumn(),
+			Text:   text,
+		},
+	}
 }

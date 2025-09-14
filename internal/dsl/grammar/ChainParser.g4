@@ -26,7 +26,7 @@ workflowSignature
     ;
 
 workflowBody
-    : prerequisteBlock?
+    : prerequisiteBlock?
         nodesBlock
         (
             successDirectionBlock
@@ -40,7 +40,7 @@ workflowParameters
     : (parameterDecl (COMMA parameterDecl)* COMMA?)?
     ;
 
-prerequisteBlock
+prerequisiteBlock
     : PREREQUISITE L_CURLY prerequisiteStmt R_CURLY EOS*
     ;
 
@@ -65,7 +65,7 @@ branchDirectionBlock
     ;
 
 prerequisiteStmt
-    : ( (SEMI | EOS | /* {this.closingBracket()}? */ ) golangEmbedStatement eos)*
+    : (golangEmbedStatement chain_eos)*
     ;
 
 golangEmbedStatement

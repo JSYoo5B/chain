@@ -22,8 +22,8 @@ type ChainParserListener interface {
 	// EnterWorkflowParameters is called when entering the workflowParameters production.
 	EnterWorkflowParameters(c *WorkflowParametersContext)
 
-	// EnterPrerequisteBlock is called when entering the prerequisteBlock production.
-	EnterPrerequisteBlock(c *PrerequisteBlockContext)
+	// EnterPrerequisiteBlock is called when entering the prerequisiteBlock production.
+	EnterPrerequisiteBlock(c *PrerequisiteBlockContext)
 
 	// EnterNodesBlock is called when entering the nodesBlock production.
 	EnterNodesBlock(c *NodesBlockContext)
@@ -388,8 +388,8 @@ type ChainParserListener interface {
 	// ExitWorkflowParameters is called when exiting the workflowParameters production.
 	ExitWorkflowParameters(c *WorkflowParametersContext)
 
-	// ExitPrerequisteBlock is called when exiting the prerequisteBlock production.
-	ExitPrerequisteBlock(c *PrerequisteBlockContext)
+	// ExitPrerequisiteBlock is called when exiting the prerequisiteBlock production.
+	ExitPrerequisiteBlock(c *PrerequisiteBlockContext)
 
 	// ExitNodesBlock is called when exiting the nodesBlock production.
 	ExitNodesBlock(c *NodesBlockContext)
