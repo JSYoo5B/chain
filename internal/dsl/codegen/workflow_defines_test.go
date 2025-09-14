@@ -33,7 +33,7 @@ func TestWorkflowEdge_ActionPlanCode(t *testing.T) {
 				WorkType: "int",
 				Plan: map[string]string{
 					chain.Success: "odd2",
-					chain.Error:   "error",
+					chain.Failure: "error",
 				},
 			},
 			expected: "chain.DefaultPlan(odd2,error)",
@@ -43,7 +43,7 @@ func TestWorkflowEdge_ActionPlanCode(t *testing.T) {
 				WorkType: "int",
 				Plan: map[string]string{
 					chain.Success: "odd2",
-					chain.Error:   "error",
+					chain.Failure: "error",
 					chain.Abort:   "abort",
 				},
 			},

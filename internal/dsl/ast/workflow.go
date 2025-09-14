@@ -23,7 +23,7 @@ type WorkflowDefinition struct {
 
 	Branches  []BranchStatement
 	Successes []DirectionStatement
-	Errors    []DirectionStatement
+	Failures  []DirectionStatement
 	Aborts    []DirectionStatement
 
 	CodeLocation

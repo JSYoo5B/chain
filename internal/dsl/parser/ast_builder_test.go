@@ -590,7 +590,7 @@ func TestAstBuilder_Directions(t *testing.T) {
 				`        a, b, c`,
 				`    success:`,
 				tc.directionBlock,
-				`    error:`,
+				`    failure:`,
 				tc.directionBlock,
 				`    abort:`,
 				tc.directionBlock,
@@ -611,7 +611,7 @@ func TestAstBuilder_Directions(t *testing.T) {
 				assert.Equal(t, tc.directions[i].ToNode, direction.ToNode)
 			}
 
-			resultDirections = result.Workflows[0].Errors
+			resultDirections = result.Workflows[0].Failures
 			assert.Len(t, resultDirections, len(tc.directions))
 			for i, direction := range resultDirections {
 				assert.Equal(t, tc.directions[i].FromNode, direction.FromNode)

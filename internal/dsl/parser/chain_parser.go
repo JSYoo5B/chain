@@ -36,19 +36,19 @@ func chainparserParserInit() {
 		"'defer'", "'else'", "'fallthrough'", "'for'", "'func'", "'go'", "'goto'",
 		"'if'", "'import'", "'interface'", "'map'", "'nil'", "'package'", "'range'",
 		"'return'", "'select'", "'struct'", "'switch'", "'type'", "'var'", "'workflow'",
-		"'prerequisite'", "'nodes'", "'branches'", "'success'", "'error'", "'abort'",
-		"'end'", "", "'('", "')'", "'{'", "'}'", "'['", "']'", "'='", "','",
-		"';'", "':'", "'.'", "'++'", "'--'", "':='", "'...'", "'||'", "'&&'",
-		"'=='", "'!='", "'<'", "'<='", "'>'", "'>='", "'|'", "'/'", "'%'", "'<<'",
-		"'>>'", "'&^'", "'~'", "'!'", "'+'", "'-'", "'^'", "'*'", "'&'", "'<-'",
-		"'-->'", "'<--'",
+		"'prerequisite'", "'nodes'", "'branches'", "'success'", "'failure'",
+		"'abort'", "'end'", "", "'('", "')'", "'{'", "'}'", "'['", "']'", "'='",
+		"','", "';'", "':'", "'.'", "'++'", "'--'", "':='", "'...'", "'||'",
+		"'&&'", "'=='", "'!='", "'<'", "'<='", "'>'", "'>='", "'|'", "'/'",
+		"'%'", "'<<'", "'>>'", "'&^'", "'~'", "'!'", "'+'", "'-'", "'^'", "'*'",
+		"'&'", "'<-'", "'-->'", "'<--'",
 	}
 	staticData.SymbolicNames = []string{
 		"", "BREAK", "CASE", "CHAN", "CONST", "CONTINUE", "DEFAULT", "DEFER",
 		"ELSE", "FALLTHROUGH", "FOR", "FUNC", "GO", "GOTO", "IF", "IMPORT",
 		"INTERFACE", "MAP", "NIL_LIT", "PACKAGE", "RANGE", "RETURN", "SELECT",
 		"STRUCT", "SWITCH", "TYPE", "VAR", "WORKFLOW", "PREREQUISITE", "NODES",
-		"BRANCHES", "SUCCESS", "ERROR", "ABORT", "END", "IDENTIFIER", "L_PAREN",
+		"BRANCHES", "SUCCESS", "FAILURE", "ABORT", "END", "IDENTIFIER", "L_PAREN",
 		"R_PAREN", "L_CURLY", "R_CURLY", "L_BRACKET", "R_BRACKET", "ASSIGN",
 		"COMMA", "SEMI", "COLON", "DOT", "PLUS_PLUS", "MINUS_MINUS", "DECLARE_ASSIGN",
 		"ELLIPSIS", "LOGICAL_OR", "LOGICAL_AND", "EQUALS", "NOT_EQUALS", "LESS",
@@ -64,7 +64,7 @@ func chainparserParserInit() {
 	}
 	staticData.RuleNames = []string{
 		"sourceFile", "workflowDecl", "workflowSignature", "workflowBody", "workflowParameters",
-		"prerequisiteBlock", "nodesBlock", "successDirectionBlock", "errorDirectionBlock",
+		"prerequisiteBlock", "nodesBlock", "successDirectionBlock", "failureDirectionBlock",
 		"abortDirectionBlock", "branchDirectionBlock", "prerequisiteStmt", "golangEmbedStatement",
 		"nodeName", "directionStmt", "edgeDirection", "branchStmt", "chain_eos",
 		"packageClause", "packageName", "identifier", "importDecl", "importSpec",
@@ -710,7 +710,7 @@ const (
 	ChainParserNODES                  = 29
 	ChainParserBRANCHES               = 30
 	ChainParserSUCCESS                = 31
-	ChainParserERROR                  = 32
+	ChainParserFAILURE                = 32
 	ChainParserABORT                  = 33
 	ChainParserEND                    = 34
 	ChainParserIDENTIFIER             = 35
@@ -791,7 +791,7 @@ const (
 	ChainParserRULE_prerequisiteBlock     = 5
 	ChainParserRULE_nodesBlock            = 6
 	ChainParserRULE_successDirectionBlock = 7
-	ChainParserRULE_errorDirectionBlock   = 8
+	ChainParserRULE_failureDirectionBlock = 8
 	ChainParserRULE_abortDirectionBlock   = 9
 	ChainParserRULE_branchDirectionBlock  = 10
 	ChainParserRULE_prerequisiteStmt      = 11
@@ -1629,8 +1629,8 @@ type IWorkflowBodyContext interface {
 	PrerequisiteBlock() IPrerequisiteBlockContext
 	AllSuccessDirectionBlock() []ISuccessDirectionBlockContext
 	SuccessDirectionBlock(i int) ISuccessDirectionBlockContext
-	AllErrorDirectionBlock() []IErrorDirectionBlockContext
-	ErrorDirectionBlock(i int) IErrorDirectionBlockContext
+	AllFailureDirectionBlock() []IFailureDirectionBlockContext
+	FailureDirectionBlock(i int) IFailureDirectionBlockContext
 	AllAbortDirectionBlock() []IAbortDirectionBlockContext
 	AbortDirectionBlock(i int) IAbortDirectionBlockContext
 	AllBranchDirectionBlock() []IBranchDirectionBlockContext
@@ -1745,20 +1745,20 @@ func (s *WorkflowBodyContext) SuccessDirectionBlock(i int) ISuccessDirectionBloc
 	return t.(ISuccessDirectionBlockContext)
 }
 
-func (s *WorkflowBodyContext) AllErrorDirectionBlock() []IErrorDirectionBlockContext {
+func (s *WorkflowBodyContext) AllFailureDirectionBlock() []IFailureDirectionBlockContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
-		if _, ok := ctx.(IErrorDirectionBlockContext); ok {
+		if _, ok := ctx.(IFailureDirectionBlockContext); ok {
 			len++
 		}
 	}
 
-	tst := make([]IErrorDirectionBlockContext, len)
+	tst := make([]IFailureDirectionBlockContext, len)
 	i := 0
 	for _, ctx := range children {
-		if t, ok := ctx.(IErrorDirectionBlockContext); ok {
-			tst[i] = t.(IErrorDirectionBlockContext)
+		if t, ok := ctx.(IFailureDirectionBlockContext); ok {
+			tst[i] = t.(IFailureDirectionBlockContext)
 			i++
 		}
 	}
@@ -1766,11 +1766,11 @@ func (s *WorkflowBodyContext) AllErrorDirectionBlock() []IErrorDirectionBlockCon
 	return tst
 }
 
-func (s *WorkflowBodyContext) ErrorDirectionBlock(i int) IErrorDirectionBlockContext {
+func (s *WorkflowBodyContext) FailureDirectionBlock(i int) IFailureDirectionBlockContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IErrorDirectionBlockContext); ok {
+		if _, ok := ctx.(IFailureDirectionBlockContext); ok {
 			if j == i {
 				t = ctx.(antlr.RuleContext)
 				break
@@ -1783,7 +1783,7 @@ func (s *WorkflowBodyContext) ErrorDirectionBlock(i int) IErrorDirectionBlockCon
 		return nil
 	}
 
-	return t.(IErrorDirectionBlockContext)
+	return t.(IFailureDirectionBlockContext)
 }
 
 func (s *WorkflowBodyContext) AllAbortDirectionBlock() []IAbortDirectionBlockContext {
@@ -1933,10 +1933,10 @@ func (p *ChainParser) WorkflowBody() (localctx IWorkflowBodyContext) {
 				p.SuccessDirectionBlock()
 			}
 
-		case ChainParserERROR:
+		case ChainParserFAILURE:
 			{
 				p.SetState(286)
-				p.ErrorDirectionBlock()
+				p.FailureDirectionBlock()
 			}
 
 		case ChainParserABORT:
@@ -2809,66 +2809,66 @@ errorExit:
 	goto errorExit // Trick to prevent compiler error if the label is not used
 }
 
-// IErrorDirectionBlockContext is an interface to support dynamic dispatch.
-type IErrorDirectionBlockContext interface {
+// IFailureDirectionBlockContext is an interface to support dynamic dispatch.
+type IFailureDirectionBlockContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
-	ERROR() antlr.TerminalNode
+	FAILURE() antlr.TerminalNode
 	COLON() antlr.TerminalNode
 	AllDirectionStmt() []IDirectionStmtContext
 	DirectionStmt(i int) IDirectionStmtContext
 	AllChain_eos() []IChain_eosContext
 	Chain_eos(i int) IChain_eosContext
 
-	// IsErrorDirectionBlockContext differentiates from other interfaces.
-	IsErrorDirectionBlockContext()
+	// IsFailureDirectionBlockContext differentiates from other interfaces.
+	IsFailureDirectionBlockContext()
 }
 
-type ErrorDirectionBlockContext struct {
+type FailureDirectionBlockContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyErrorDirectionBlockContext() *ErrorDirectionBlockContext {
-	var p = new(ErrorDirectionBlockContext)
+func NewEmptyFailureDirectionBlockContext() *FailureDirectionBlockContext {
+	var p = new(FailureDirectionBlockContext)
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = ChainParserRULE_errorDirectionBlock
+	p.RuleIndex = ChainParserRULE_failureDirectionBlock
 	return p
 }
 
-func InitEmptyErrorDirectionBlockContext(p *ErrorDirectionBlockContext) {
+func InitEmptyFailureDirectionBlockContext(p *FailureDirectionBlockContext) {
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, nil, -1)
-	p.RuleIndex = ChainParserRULE_errorDirectionBlock
+	p.RuleIndex = ChainParserRULE_failureDirectionBlock
 }
 
-func (*ErrorDirectionBlockContext) IsErrorDirectionBlockContext() {}
+func (*FailureDirectionBlockContext) IsFailureDirectionBlockContext() {}
 
-func NewErrorDirectionBlockContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *ErrorDirectionBlockContext {
-	var p = new(ErrorDirectionBlockContext)
+func NewFailureDirectionBlockContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *FailureDirectionBlockContext {
+	var p = new(FailureDirectionBlockContext)
 
 	antlr.InitBaseParserRuleContext(&p.BaseParserRuleContext, parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = ChainParserRULE_errorDirectionBlock
+	p.RuleIndex = ChainParserRULE_failureDirectionBlock
 
 	return p
 }
 
-func (s *ErrorDirectionBlockContext) GetParser() antlr.Parser { return s.parser }
+func (s *FailureDirectionBlockContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ErrorDirectionBlockContext) ERROR() antlr.TerminalNode {
-	return s.GetToken(ChainParserERROR, 0)
+func (s *FailureDirectionBlockContext) FAILURE() antlr.TerminalNode {
+	return s.GetToken(ChainParserFAILURE, 0)
 }
 
-func (s *ErrorDirectionBlockContext) COLON() antlr.TerminalNode {
+func (s *FailureDirectionBlockContext) COLON() antlr.TerminalNode {
 	return s.GetToken(ChainParserCOLON, 0)
 }
 
-func (s *ErrorDirectionBlockContext) AllDirectionStmt() []IDirectionStmtContext {
+func (s *FailureDirectionBlockContext) AllDirectionStmt() []IDirectionStmtContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -2889,7 +2889,7 @@ func (s *ErrorDirectionBlockContext) AllDirectionStmt() []IDirectionStmtContext 
 	return tst
 }
 
-func (s *ErrorDirectionBlockContext) DirectionStmt(i int) IDirectionStmtContext {
+func (s *FailureDirectionBlockContext) DirectionStmt(i int) IDirectionStmtContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -2909,7 +2909,7 @@ func (s *ErrorDirectionBlockContext) DirectionStmt(i int) IDirectionStmtContext 
 	return t.(IDirectionStmtContext)
 }
 
-func (s *ErrorDirectionBlockContext) AllChain_eos() []IChain_eosContext {
+func (s *FailureDirectionBlockContext) AllChain_eos() []IChain_eosContext {
 	children := s.GetChildren()
 	len := 0
 	for _, ctx := range children {
@@ -2930,7 +2930,7 @@ func (s *ErrorDirectionBlockContext) AllChain_eos() []IChain_eosContext {
 	return tst
 }
 
-func (s *ErrorDirectionBlockContext) Chain_eos(i int) IChain_eosContext {
+func (s *FailureDirectionBlockContext) Chain_eos(i int) IChain_eosContext {
 	var t antlr.RuleContext
 	j := 0
 	for _, ctx := range s.GetChildren() {
@@ -2950,35 +2950,35 @@ func (s *ErrorDirectionBlockContext) Chain_eos(i int) IChain_eosContext {
 	return t.(IChain_eosContext)
 }
 
-func (s *ErrorDirectionBlockContext) GetRuleContext() antlr.RuleContext {
+func (s *FailureDirectionBlockContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *ErrorDirectionBlockContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *FailureDirectionBlockContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *ErrorDirectionBlockContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *FailureDirectionBlockContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(ChainParserListener); ok {
-		listenerT.EnterErrorDirectionBlock(s)
+		listenerT.EnterFailureDirectionBlock(s)
 	}
 }
 
-func (s *ErrorDirectionBlockContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *FailureDirectionBlockContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(ChainParserListener); ok {
-		listenerT.ExitErrorDirectionBlock(s)
+		listenerT.ExitFailureDirectionBlock(s)
 	}
 }
 
-func (p *ChainParser) ErrorDirectionBlock() (localctx IErrorDirectionBlockContext) {
-	localctx = NewErrorDirectionBlockContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 16, ChainParserRULE_errorDirectionBlock)
+func (p *ChainParser) FailureDirectionBlock() (localctx IFailureDirectionBlockContext) {
+	localctx = NewFailureDirectionBlockContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 16, ChainParserRULE_failureDirectionBlock)
 	var _la int
 
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(337)
-		p.Match(ChainParserERROR)
+		p.Match(ChainParserFAILURE)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit

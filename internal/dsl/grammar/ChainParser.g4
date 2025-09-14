@@ -30,7 +30,7 @@ workflowBody
         nodesBlock
         (
             successDirectionBlock
-            | errorDirectionBlock
+            | failureDirectionBlock
             | abortDirectionBlock
             | branchDirectionBlock
         )+
@@ -52,8 +52,8 @@ successDirectionBlock
     : SUCCESS COLON (directionStmt chain_eos?)+
     ;
 
-errorDirectionBlock
-    : ERROR COLON (directionStmt chain_eos?)+
+failureDirectionBlock
+    : FAILURE COLON (directionStmt chain_eos?)+
     ;
 
 abortDirectionBlock

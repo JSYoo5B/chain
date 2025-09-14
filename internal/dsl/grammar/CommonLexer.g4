@@ -75,7 +75,7 @@ PREREQUISITE    : 'prerequisite';
 NODES           : 'nodes';
 BRANCHES        : 'branches';
 SUCCESS         : 'success';
-ERROR           : 'error';
+FAILURE         : 'failure';
 ABORT           : 'abort';
 END             : 'end';
 

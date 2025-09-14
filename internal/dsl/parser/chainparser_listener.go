@@ -31,8 +31,8 @@ type ChainParserListener interface {
 	// EnterSuccessDirectionBlock is called when entering the successDirectionBlock production.
 	EnterSuccessDirectionBlock(c *SuccessDirectionBlockContext)
 
-	// EnterErrorDirectionBlock is called when entering the errorDirectionBlock production.
-	EnterErrorDirectionBlock(c *ErrorDirectionBlockContext)
+	// EnterFailureDirectionBlock is called when entering the failureDirectionBlock production.
+	EnterFailureDirectionBlock(c *FailureDirectionBlockContext)
 
 	// EnterAbortDirectionBlock is called when entering the abortDirectionBlock production.
 	EnterAbortDirectionBlock(c *AbortDirectionBlockContext)
@@ -400,8 +400,8 @@ type ChainParserListener interface {
 	// ExitSuccessDirectionBlock is called when exiting the successDirectionBlock production.
 	ExitSuccessDirectionBlock(c *SuccessDirectionBlockContext)
 
-	// ExitErrorDirectionBlock is called when exiting the errorDirectionBlock production.
-	ExitErrorDirectionBlock(c *ErrorDirectionBlockContext)
+	// ExitFailureDirectionBlock is called when exiting the failureDirectionBlock production.
+	ExitFailureDirectionBlock(c *FailureDirectionBlockContext)
 
 	// ExitAbortDirectionBlock is called when exiting the abortDirectionBlock production.
 	ExitAbortDirectionBlock(c *AbortDirectionBlockContext)

@@ -68,11 +68,11 @@ func (s *BaseChainParserListener) EnterSuccessDirectionBlock(ctx *SuccessDirecti
 // ExitSuccessDirectionBlock is called when production successDirectionBlock is exited.
 func (s *BaseChainParserListener) ExitSuccessDirectionBlock(ctx *SuccessDirectionBlockContext) {}
 
-// EnterErrorDirectionBlock is called when production errorDirectionBlock is entered.
-func (s *BaseChainParserListener) EnterErrorDirectionBlock(ctx *ErrorDirectionBlockContext) {}
+// EnterFailureDirectionBlock is called when production failureDirectionBlock is entered.
+func (s *BaseChainParserListener) EnterFailureDirectionBlock(ctx *FailureDirectionBlockContext) {}
 
-// ExitErrorDirectionBlock is called when production errorDirectionBlock is exited.
-func (s *BaseChainParserListener) ExitErrorDirectionBlock(ctx *ErrorDirectionBlockContext) {}
+// ExitFailureDirectionBlock is called when production failureDirectionBlock is exited.
+func (s *BaseChainParserListener) ExitFailureDirectionBlock(ctx *FailureDirectionBlockContext) {}
 
 // EnterAbortDirectionBlock is called when production abortDirectionBlock is entered.
 func (s *BaseChainParserListener) EnterAbortDirectionBlock(ctx *AbortDirectionBlockContext) {}

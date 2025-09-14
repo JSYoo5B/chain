@@ -40,15 +40,15 @@ func (e WorkflowEdge) ActionPlanCode() string {
 		return fmt.Sprintf("chain.SuccessOnlyPlan(%s)",
 			e.Plan[chain.Success])
 	} else if len(e.Plan) == 2 &&
-		e.Plan[chain.Success] != "" && e.Plan[chain.Error] != "" {
+		e.Plan[chain.Success] != "" && e.Plan[chain.Failure] != "" {
 		return fmt.Sprintf("chain.DefaultPlan(%s, %s)",
 			e.Plan[chain.Success],
-			e.Plan[chain.Error])
+			e.Plan[chain.Failure])
 	} else if len(e.Plan) == 3 &&
-		e.Plan[chain.Success] != "" && e.Plan[chain.Error] != "" && e.Plan[chain.Abort] != "" {
+		e.Plan[chain.Success] != "" && e.Plan[chain.Failure] != "" && e.Plan[chain.Abort] != "" {
 		return fmt.Sprintf("chain.DefaultPlanWithAbort(%s, %s, %s)",
 			e.Plan[chain.Success],
-			e.Plan[chain.Error],
+			e.Plan[chain.Failure],
 			e.Plan[chain.Abort])
 	}
 

@@ -156,14 +156,14 @@ func (a *AstBuilder) EnterSuccessDirectionBlock(ctx *SuccessDirectionBlockContex
 	}
 }
 
-func (a *AstBuilder) EnterErrorDirectionBlock(ctx *ErrorDirectionBlockContext) {
+func (a *AstBuilder) EnterFailureDirectionBlock(ctx *FailureDirectionBlockContext) {
 	if a.currentWorkflow == nil {
 		return
 	}
 
 	allDirectionStatements := ctx.AllDirectionStmt()
 	for _, directionStmt := range allDirectionStatements {
-		a.currentWorkflow.Errors = append(a.currentWorkflow.Errors, parseDirections(directionStmt)...)
+		a.currentWorkflow.Failures = append(a.currentWorkflow.Failures, parseDirections(directionStmt)...)
 	}
 }
 
