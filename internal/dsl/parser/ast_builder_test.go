@@ -437,3 +437,74 @@ func TestAstBuilder_PrerequisiteBlock_multiple(t *testing.T) {
 		})
 	}
 }
+
+func TestAstBuilder_NodesBlock(t *testing.T) {
+	type testCase struct {
+		nodesCode string
+		nodeNames []string
+	}
+
+	testCases := map[string]testCase{
+		"simple": {
+			nodesCode: `a, b, c`,
+			nodeNames: []string{`a`, `b`, `c`},
+		},
+		"multi-lines": {
+			nodesCode: strings.Join([]string{
+				`a, b, c,`,
+				`d, e`,
+			}, "\n"),
+			nodeNames: []string{`a`, `b`, `c`, `d`, `e`},
+		},
+		"multi-line with comment": {
+			nodesCode: strings.Join([]string{
+				`a, b, c, // trail comment`,
+				`d, e`,
+			}, "\n"),
+			nodeNames: []string{`a`, `b`, `c`, `d`, `e`},
+		},
+		"comment is multi-lined": {
+			nodesCode: strings.Join([]string{
+				`a, b,/*`,
+				`d, e`,
+				`*/ c`,
+			}, "\n"),
+			nodeNames: []string{`a`, `b`, `c`},
+		},
+		"variant node names": {
+			nodesCode: `branch, even, odd1, odd2`,
+			nodeNames: []string{`branch`, `even`, `odd1`, `odd2`},
+		},
+		"node contains comment": {
+			nodesCode: `branch, even, odd1, /*comment*/ odd2`,
+			nodeNames: []string{`branch`, `even`, `odd1`, `odd2`},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := strings.Join([]string{
+				`package chain_test`,
+				`import "github.com/JSYoo5B/chain"`,
+				``,
+				`workflow helloworld() HelloWorld[string] {`,
+				`    prerequisite {`,
+				`    }`,
+				`    nodes:`,
+				tc.nodesCode,
+				`}`,
+			}, "\n")
+
+			result := buildAstForTest(input)
+			require.Equal(t, "chain_test", result.Package.Name)
+			require.Len(t, result.Imports, 1)
+			require.Equal(t, "github.com/JSYoo5B/chain", result.Imports[0].Path)
+			require.Len(t, result.Workflows, 1)
+
+			assert.Len(t, result.Workflows[0].NodesBlock.Nodes, len(tc.nodeNames))
+			for i, node := range result.Workflows[0].NodesBlock.Nodes {
+				assert.Equal(t, tc.nodeNames[i], node.Name)
+			}
+		})
+	}
+}

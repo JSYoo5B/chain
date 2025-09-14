@@ -19,7 +19,7 @@ type WorkflowDeclaration struct {
 
 type WorkflowDefinition struct {
 	Prerequisite PrerequisiteBlock
-	Nodes        NodeBlock
+	NodesBlock
 
 	Branches  []BranchStatement
 	Successes []DirectionStatement
@@ -34,8 +34,9 @@ type PrerequisiteBlock struct {
 	CodeLocation
 }
 
-type NodeBlock struct {
+type NodesBlock struct {
 	Nodes []WorkflowNode
+	CodeLocation
 }
 
 type WorkflowNode struct {

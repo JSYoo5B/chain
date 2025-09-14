@@ -123,3 +123,24 @@ func (a *AstBuilder) EnterPrerequisiteBlock(ctx *PrerequisiteBlockContext) {
 		},
 	}
 }
+
+func (a *AstBuilder) EnterNodesBlock(ctx *NodesBlockContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	startToken, allNodeName := ctx.GetStart(), ctx.AllNodeName()
+	nodes := make([]ast.WorkflowNode, 0, len(allNodeName))
+	for _, nodeName := range allNodeName {
+		node := ast.WorkflowNode{
+			Name:         nodeName.GetText(),
+			CodeLocation: newCodeLocationFromToken(nodeName.GetStart()),
+		}
+		nodes = append(nodes, node)
+	}
+
+	a.currentWorkflow.NodesBlock = ast.NodesBlock{
+		Nodes:        nodes,
+		CodeLocation: newCodeLocationFromToken(startToken),
+	}
+}
