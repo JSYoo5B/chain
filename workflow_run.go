@@ -25,7 +25,7 @@ func (w *Workflow[T]) Run(ctx context.Context, input T) (output T, err error) {
 // RunAt starts the execution of the Workflow from a given Action (initAction).
 // It follows the action plan, executing actions sequentially based on the specified directions.
 // If an action returns an error, the Workflow will proceed to the next action according to
-// the defined plan, potentially directing the flow to an action mapped for the Error direction.
+// the defined plan, potentially directing the flow to an action mapped for the Failure direction.
 // The Abort direction, when encountered, will immediately halt the Workflow execution unless
 // the plan specifies otherwise.
 // If no action plan is found for a given direction,
@@ -69,7 +69,7 @@ func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		}
 	}
 	if lastErr != nil && direction != Abort {
-		direction = Error
+		direction = Failure
 	}
 
 	return output, lastErr
@@ -111,7 +111,7 @@ func runAction[T any](action Action[T], ctx context.Context, input T) (output T,
 			return output, Abort, runError
 		}
 
-		return output, Error, runError
+		return output, Failure, runError
 	}
 	direction = Success
 	if branchAction, isBranchAction := action.(BranchAction[T]); isBranchAction {

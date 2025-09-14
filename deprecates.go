@@ -89,3 +89,6 @@ func NewTypeAdapterAction[T any, U any](
 		(ExternalTypeSetter[T, U])(setter),
 	)
 }
+
+// Deprecated. Use Failure
+const Error = Failure
