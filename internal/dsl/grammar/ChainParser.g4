@@ -21,7 +21,7 @@ workflowDecl
 workflowSignature
     : workflowConstruct=IDENTIFIER
         L_PAREN workflowParameters R_PAREN
-        GENERATES? workflowName=IDENTIFIER
+        workflowName=IDENTIFIER
         L_BRACKET workflowType=typeElement R_BRACKET
     ;
 

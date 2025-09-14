@@ -4,7 +4,7 @@ import (
     "context"
 )
 
-workflow basicCollatzFunction() generates SimpleCollatz[int] {
+workflow basicCollatzFunction() SimpleCollatz[int] {
     prerequisite {
         branch := checkNext()
         even := half()

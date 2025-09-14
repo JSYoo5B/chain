@@ -141,61 +141,6 @@ func TestAstBuilder_WorkflowDef(t *testing.T) {
 
 	testCases := map[string]testCase{
 		"simple constructor": {
-			declares: []string{`workflow helloWorld() generates HelloWorld[string]`},
-			expected: []ast.WorkflowDeclaration{
-				{
-					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
-					ConstructorParams: ast.CodeLocation{Text: ""},
-					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
-					WorkflowType:      ast.CodeLocation{Text: "string"},
-				},
-			},
-		},
-		"with single parameter constructors": {
-			declares: []string{`workflow helloWorld(name string) generates HelloWorld[string]`},
-			expected: []ast.WorkflowDeclaration{
-				{
-					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
-					ConstructorParams: ast.CodeLocation{Text: "name string"},
-					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
-					WorkflowType:      ast.CodeLocation{Text: "string"},
-				},
-			},
-		},
-		"with multiple parameter constructors": {
-			declares: []string{`workflow helloWorld(name string, age int) generates HelloWorld[string]`},
-			expected: []ast.WorkflowDeclaration{
-				{
-					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
-					ConstructorParams: ast.CodeLocation{Text: "name string, age int"},
-					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
-					WorkflowType:      ast.CodeLocation{Text: "string"},
-				},
-			},
-		},
-		"with parameter signature type reuse": {
-			declares: []string{`workflow helloWorld(first, last string) generates HelloWorld[string]`},
-			expected: []ast.WorkflowDeclaration{
-				{
-					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
-					ConstructorParams: ast.CodeLocation{Text: "first, last string"},
-					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
-					WorkflowType:      ast.CodeLocation{Text: "string"},
-				},
-			},
-		},
-		"with multiple generic type": {
-			declares: []string{`workflow helloWorld() generates HelloWorld[int8|int16]`},
-			expected: []ast.WorkflowDeclaration{
-				{
-					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
-					ConstructorParams: ast.CodeLocation{Text: ""},
-					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
-					WorkflowType:      ast.CodeLocation{Text: "int8|int16"},
-				},
-			},
-		},
-		"skip generates": {
 			declares: []string{`workflow helloWorld() HelloWorld[string]`},
 			expected: []ast.WorkflowDeclaration{
 				{
@@ -206,10 +151,54 @@ func TestAstBuilder_WorkflowDef(t *testing.T) {
 				},
 			},
 		},
+		"with single parameter constructors": {
+			declares: []string{`workflow helloWorld(name string) HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: "name string"},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with multiple parameter constructors": {
+			declares: []string{`workflow helloWorld(name string, age int) HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: "name string, age int"},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with parameter signature type reuse": {
+			declares: []string{`workflow helloWorld(first, last string) HelloWorld[string]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: "first, last string"},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "string"},
+				},
+			},
+		},
+		"with multiple generic type": {
+			declares: []string{`workflow helloWorld() HelloWorld[int8|int16]`},
+			expected: []ast.WorkflowDeclaration{
+				{
+					ConstructorName:   ast.CodeLocation{Text: "helloWorld"},
+					ConstructorParams: ast.CodeLocation{Text: ""},
+					WorkflowName:      ast.CodeLocation{Text: "HelloWorld"},
+					WorkflowType:      ast.CodeLocation{Text: "int8|int16"},
+				},
+			},
+		},
 		"multiple workflows": {
 			declares: []string{
-				`workflow helloWorld() generates HelloWorld[string]`,
-				`workflow goodByeWorld() generates GoodByeWorld[string]`,
+				`workflow helloWorld() HelloWorld[string]`,
+				`workflow goodByeWorld() GoodByeWorld[string]`,
 			},
 			expected: []ast.WorkflowDeclaration{
 				{

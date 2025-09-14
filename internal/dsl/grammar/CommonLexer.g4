@@ -71,7 +71,6 @@ VAR         : 'var';
 
 // Chain custom Keywords
 WORKFLOW        : 'workflow';
-GENERATES       : 'generates';
 PREREQUISITE    : 'prerequisite';
 NODES           : 'nodes';
 BRANCHES        : 'branches';

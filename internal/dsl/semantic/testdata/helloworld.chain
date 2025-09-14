@@ -1,6 +1,6 @@
 package hello
 
-workflow helloWorld() generates helloWorld[string] {
+workflow helloWorld() helloWorld[string] {
     prerequisite {
         hello := printAction("Hello")
         world := printAction("World")
