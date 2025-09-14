@@ -52,7 +52,7 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 		}
 
 		defaultPlan := ActionPlan[T]{}
-		availableDirections := []string{Success, Error, Abort}
+		availableDirections := []string{Success, Failure, Abort}
 		if branchAction, isBranchAction := action.(BranchAction[T]); isBranchAction {
 			availableDirections = append(availableDirections, branchAction.Directions()...)
 		}
@@ -71,7 +71,7 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 // SetRunPlan updates the execution flow for the given currentAction in the Workflow
 // by associating it with a specified ActionPlan. The currentAction will be validated
 // to ensure it is a member of the Workflow. The ActionPlan defines the directions
-// (such as Success, Error, Abort) and their corresponding next actions in the execution flow.
+// (such as Success, Failure, Abort) and their corresponding next actions in the execution flow.
 //
 // If the currentAction is nil or not part of the Workflow, a panic will occur.
 // The plan can be nil, in which case the currentAction will be set to terminate
@@ -95,7 +95,7 @@ func (w *Workflow[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 
 	// Set the next action to terminate when allowed directions were not specified in the plan
 	terminate := Terminate[T]()
-	availableDirections := []string{Success, Error, Abort}
+	availableDirections := []string{Success, Failure, Abort}
 	if branchAction, isBranchAction := currentAction.(BranchAction[T]); isBranchAction {
 		availableDirections = append(availableDirections, branchAction.Directions()...)
 	}

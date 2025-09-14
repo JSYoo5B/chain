@@ -123,7 +123,7 @@ func TestWorkflow_Configure(t *testing.T) {
 
 				workflow.SetRunPlan(action1, ActionPlan[string]{
 					Success: terminate,
-					// Not configuring Error, Abort
+					// Not configuring Failure, Abort
 				})
 			},
 			panics: false,
