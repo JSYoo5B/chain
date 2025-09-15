@@ -16,7 +16,7 @@ import (
 // Workflows within other Workflows.
 type Workflow[T any] struct {
 	name       string
-	runPlans   map[Action[T]]ActionPlan[T]
+	runPlans   map[Action[T]]RunPlan[T]
 	initAction Action[T]
 }
 
@@ -33,7 +33,7 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 
 	p := &Workflow[T]{
 		name:       name,
-		runPlans:   map[Action[T]]ActionPlan[T]{},
+		runPlans:   map[Action[T]]RunPlan[T]{},
 		initAction: memberActions[0],
 	}
 
@@ -51,7 +51,7 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 			nextAction = memberActions[i+1]
 		}
 
-		defaultPlan := ActionPlan[T]{}
+		defaultPlan := RunPlan[T]{}
 		availableDirections := []string{Success, Failure, Abort}
 		if branchAction, isBranchAction := action.(BranchAction[T]); isBranchAction {
 			availableDirections = append(availableDirections, branchAction.Directions()...)
@@ -69,8 +69,8 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 }
 
 // SetRunPlan updates the execution flow for the given currentAction in the Workflow
-// by associating it with a specified ActionPlan. The currentAction will be validated
-// to ensure it is a member of the Workflow. The ActionPlan defines the directions
+// by associating it with a specified RunPlan. The currentAction will be validated
+// to ensure it is a member of the Workflow. The RunPlan defines the directions
 // (such as Success, Failure, Abort) and their corresponding next actions in the execution flow.
 //
 // If the currentAction is nil or not part of the Workflow, a panic will occur.
@@ -81,7 +81,7 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 //
 // Additionally, self-loops are not allowed in the plan. If the next action for
 // a direction is the current action itself, a panic will be triggered.
-func (w *Workflow[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
+func (w *Workflow[T]) SetRunPlan(currentAction Action[T], plan RunPlan[T]) {
 	if currentAction == nil {
 		panic(errors.New("cannot set plan for terminate"))
 	} else if !isMemberActionInWorkflow(currentAction, w) {
@@ -90,7 +90,7 @@ func (w *Workflow[T]) SetRunPlan(currentAction Action[T], plan ActionPlan[T]) {
 
 	// When the given plan is nil, make currentAction to terminate on any cases
 	if plan == nil {
-		plan = ActionPlan[T]{}
+		plan = RunPlan[T]{}
 	}
 
 	// Set the next action to terminate when allowed directions were not specified in the plan

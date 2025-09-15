@@ -70,7 +70,7 @@ func TestWorkflow_Configure(t *testing.T) {
 				action1, action2 := newAction("action1"), newAction("action2")
 				workflow := NewWorkflow("Workflow", action1, action2)
 
-				workflow.SetRunPlan(action1, ActionPlan[string]{
+				workflow.SetRunPlan(action1, RunPlan[string]{
 					"unsupported": action2,
 				})
 			},
@@ -121,7 +121,7 @@ func TestWorkflow_Configure(t *testing.T) {
 				action1 := newAction("action")
 				workflow := NewWorkflow("Workflow", action1)
 
-				workflow.SetRunPlan(action1, ActionPlan[string]{
+				workflow.SetRunPlan(action1, RunPlan[string]{
 					Success: terminate,
 					// Not configuring Failure, Abort
 				})

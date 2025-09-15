@@ -61,7 +61,7 @@ func (w *Workflow[T]) ValidateGraph() error {
 	return nil
 }
 
-func dfsWithCycleCheck[T any](node Action[T], graph map[Action[T]]ActionPlan[T], visited map[Action[T]]int, path []string) error {
+func dfsWithCycleCheck[T any](node Action[T], graph map[Action[T]]RunPlan[T], visited map[Action[T]]int, path []string) error {
 	path = append(path, "`"+node.Name()+"`")
 
 	if visited[node] != notVisited {

@@ -75,7 +75,7 @@ func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 	return output, lastErr
 }
 
-func selectNextAction[T any](plan ActionPlan[T], currentAction Action[T], direction string) (nextAction Action[T], err error) {
+func selectNextAction[T any](plan RunPlan[T], currentAction Action[T], direction string) (nextAction Action[T], err error) {
 	var (
 		terminate = Terminate[T]()
 		exist     bool

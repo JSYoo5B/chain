@@ -57,7 +57,7 @@ func TestWorkflowEdge_ActionPlanCode(t *testing.T) {
 					"odd":  "odd1",
 				},
 			},
-			expected: `chain.ActionPlan[int]{"even":even,"odd":odd1,}`,
+			expected: `chain.RunPlan[int]{"even":even,"odd":odd1,}`,
 		},
 	}
 

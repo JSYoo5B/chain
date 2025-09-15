@@ -92,3 +92,6 @@ func NewTypeAdapterAction[T any, U any](
 
 // Deprecated. Use Failure
 const Error = Failure
+
+// Deprecated. Use RunPlan
+type ActionPlan[T any] RunPlan[T]

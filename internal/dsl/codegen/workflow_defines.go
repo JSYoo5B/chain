@@ -64,7 +64,7 @@ var (
 )
 
 func init() {
-	tmpl := `chain.ActionPlan[{{.WorkType}}]{
+	tmpl := `chain.RunPlan[{{.WorkType}}]{
         {{- range $key, $value := .Plan }}
         "{{ $key }}": {{ $value }},
         {{- end }}
