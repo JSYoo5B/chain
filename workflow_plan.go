@@ -1,9 +1,9 @@
 package chain
 
-// ActionPlan represents a map that associates a direction
+// RunPlan represents a map that associates a direction
 // (Success, Failure, Abort, and other custom branching directions) with the next Action to execute.
 // It is used to define the flow of actions in a Workflow based on the direction of execution.
-type ActionPlan[T any] map[string]Action[T]
+type RunPlan[T any] map[string]Action[T]
 
 const (
 	// Success represents the direction indicating that the action completed successfully
@@ -19,37 +19,46 @@ const (
 	Abort = "abort"
 )
 
-// TerminationPlan returns an ActionPlan with all directions leading to termination immediately,
+// TerminationPlan returns a RunPlan with all directions leading to termination immediately,
 // providing a clear sign of termination rather than using nil.
-func TerminationPlan[T any]() ActionPlan[T] {
+func TerminationPlan[T any]() RunPlan[T] {
 	return nil
 }
 
-// SuccessOnlyPlan returns an ActionPlan where only a success direction has a valid next action,
+// SuccessOnlyPlan returns a RunPlan where only a success direction has a valid next action,
 // and Failure and Abort both lead to termination.
-func SuccessOnlyPlan[T any](success Action[T]) ActionPlan[T] {
-	return ActionPlan[T]{
+func SuccessOnlyPlan[T any](success Action[T]) RunPlan[T] {
+	return RunPlan[T]{
 		Success: success,
 		Failure: Terminate[T](),
 		Abort:   Terminate[T](),
 	}
 }
 
-// DefaultPlan returns a standard ActionPlan with valid next actions for Success and Failure,
+// DefaultPlan returns a standard RunPlan with valid next actions for Success and Failure,
 // and Termination for Abort.
-func DefaultPlan[T any](success, error Action[T]) ActionPlan[T] {
-	return ActionPlan[T]{
+func DefaultPlan[T any](success, error Action[T]) RunPlan[T] {
+	return RunPlan[T]{
 		Success: success,
 		Failure: error,
 		Abort:   Terminate[T](),
 	}
 }
 
-// DefaultPlanWithAbort returns an ActionPlan with valid next actions for Success, Failure, and Abort.
-func DefaultPlanWithAbort[T any](success, error, abort Action[T]) ActionPlan[T] {
-	return ActionPlan[T]{
+// DefaultPlanWithAbort returns a RunPlan with valid next actions for Success, Failure, and Abort.
+func DefaultPlanWithAbort[T any](success, error, abort Action[T]) RunPlan[T] {
+	return RunPlan[T]{
 		Success: success,
 		Failure: error,
 		Abort:   abort,
 	}
+}
+
+// Terminate provides an Action that explicitly stops the execution of a Workflow.
+//
+// When returned from a RunPlan, it signals that the Workflow should halt
+// and no further actions should be-executed. This serves as a clear, intentional
+// way to stop a Workflow, as opposed to returning raw nil.
+func Terminate[T any]() Action[T] {
+	return nil
 }

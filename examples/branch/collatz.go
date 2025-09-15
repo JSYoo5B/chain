@@ -9,7 +9,7 @@ func basicCollatzFunction() *chain.Workflow[int] {
 	branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
 	workflow := chain.NewWorkflow("SimpleCollatz", branch, even, odd1, odd2)
-	workflow.SetRunPlan(branch, chain.ActionPlan[int]{
+	workflow.SetRunPlan(branch, chain.RunPlan[int]{
 		"even": even,
 		"odd":  odd1,
 	})
@@ -24,7 +24,7 @@ func shortcutCollatzFunction() *chain.Workflow[int] {
 	branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
 	workflow := chain.NewWorkflow("ShortcutCollatz", branch, even, odd1, odd2)
-	workflow.SetRunPlan(branch, chain.ActionPlan[int]{
+	workflow.SetRunPlan(branch, chain.RunPlan[int]{
 		"even": even,
 		"odd":  odd1,
 	})

@@ -36,12 +36,3 @@ type BranchAction[T any] interface {
 	// The method returns a direction from the list defined by Directions.
 	NextDirection(ctx context.Context, output T) (direction string, err error)
 }
-
-// Terminate provides an Action that explicitly stops the execution of a Workflow.
-//
-// When returned from an ActionPlan, it signals that the workflow should halt
-// and no further actions should be-executed. This serves as a clear, intentional
-// way to stop a Workflow, as opposed to returning raw nil.
-func Terminate[T any]() Action[T] {
-	return nil
-}
