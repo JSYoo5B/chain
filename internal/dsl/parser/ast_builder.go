@@ -178,6 +178,17 @@ func (a *AstBuilder) EnterAbortDirectionBlock(ctx *AbortDirectionBlockContext) {
 	}
 }
 
+func (a *AstBuilder) EnterBranchDirectionBlock(ctx *BranchDirectionBlockContext) {
+	if a.currentWorkflow == nil {
+		return
+	}
+
+	allBranchStatements := ctx.AllBranchStmt()
+	for _, branchStmt := range allBranchStatements {
+		a.currentWorkflow.Branches = append(a.currentWorkflow.Branches, parseBranch(branchStmt))
+	}
+}
+
 func parseDirections(directionStatement IDirectionStmtContext) []ast.DirectionStatement {
 	nodes, edges := directionStatement.AllNodeName(), directionStatement.AllEdgeDirection()
 	directions := make([]ast.DirectionStatement, 0, len(edges))
@@ -199,4 +210,18 @@ func parseDirections(directionStatement IDirectionStmtContext) []ast.DirectionSt
 	}
 
 	return directions
+}
+
+func parseBranch(branchStatement IBranchStmtContext) ast.BranchStatement {
+	start := branchStatement.GetStart()
+	from, to := branchStatement.GetSourceNode().GetText(), branchStatement.GetDestNode().GetText()
+	conditionLiteral := branchStatement.GetBranchCond().GetText()
+	condition, _ := strconv.Unquote(conditionLiteral[1 : len(conditionLiteral)-2])
+
+	return ast.BranchStatement{
+		FromNode:     from,
+		Condition:    condition,
+		ToNode:       to,
+		CodeLocation: newCodeLocationFromToken(start),
+	}
 }

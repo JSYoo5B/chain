@@ -624,3 +624,76 @@ func TestAstBuilder_Directions(t *testing.T) {
 		})
 	}
 }
+
+func TestAstBuilder_Branches(t *testing.T) {
+	type testCase struct {
+		branchesBlock string
+		branches      []ast.BranchStatement
+	}
+
+	testCases := map[string]testCase{
+		"empty": {
+			branchesBlock: ``,
+			branches:      []ast.BranchStatement{},
+		},
+		"condition with double quote": {
+			branchesBlock: `branch -"odd"-> odd1`,
+			branches: []ast.BranchStatement{
+				{FromNode: "branch", Condition: "odd", ToNode: "odd1"},
+			},
+		},
+		"condition with backtick": {
+			branchesBlock: "branch -`odd`-> odd1",
+			branches: []ast.BranchStatement{
+				{FromNode: "branch", Condition: "odd", ToNode: "odd1"},
+			},
+		},
+		"no-spaces": {
+			branchesBlock: `branch-"odd"->odd1`,
+			branches: []ast.BranchStatement{
+				{FromNode: "branch", Condition: "odd", ToNode: "odd1"},
+			},
+		},
+		"multiple branches": {
+			branchesBlock: strings.Join([]string{
+				`branch -"odd"-> odd1`,
+				`branch -"even"-> even`,
+			}, "\n"),
+			branches: []ast.BranchStatement{
+				{FromNode: "branch", Condition: "odd", ToNode: "odd1"},
+				{FromNode: "branch", Condition: "even", ToNode: "even"},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			input := strings.Join([]string{
+				`package chain_test`,
+				`import "github.com/JSYoo5B/chain"`,
+				``,
+				`workflow helloworld() HelloWorld[string] {`,
+				`    nodes:`,
+				`        a, b, c`,
+				`    branches:`,
+				tc.branchesBlock,
+				`}`,
+			}, "\n")
+
+			result := buildAstForTest(input)
+			require.Equal(t, "chain_test", result.Package.Name)
+			require.Len(t, result.Imports, 1)
+			require.Equal(t, "github.com/JSYoo5B/chain", result.Imports[0].Path)
+			require.Len(t, result.Workflows, 1)
+			require.Len(t, result.Workflows[0].NodesBlock.Nodes, 3)
+
+			resultDirections := result.Workflows[0].Branches
+			assert.Len(t, resultDirections, len(tc.branches))
+			for i, direction := range resultDirections {
+				assert.Equal(t, tc.branches[i].FromNode, direction.FromNode)
+				assert.Equal(t, tc.branches[i].Condition, direction.Condition)
+				assert.Equal(t, tc.branches[i].ToNode, direction.ToNode)
+			}
+		})
+	}
+}
