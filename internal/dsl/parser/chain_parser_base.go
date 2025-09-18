@@ -14,7 +14,7 @@ type ChainParserBase struct {
 }
 
 func (p *ChainParserBase) myreset() {
-	p.debug = false
+	p.debug = true
 	p.table = make(map[string]bool)
 }
 
@@ -41,8 +41,8 @@ func (p *ChainParserBase) addImportSpec() {
 		name := packageName.GetText()
 		if p.debug {
 			fmt.Println("Entering " + name)
-			p.table[name] = true
 		}
+		p.table[name] = true
 	} else {
 		name := importSpec.ImportPath().GetText()
 		name = strings.ReplaceAll(name, "\"", "")
