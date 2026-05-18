@@ -2,12 +2,12 @@ package chain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"maps"
 	"runtime/debug"
-	"sync"
 )
 
 // AsParallelMapAction creates an Action that processes a map's values in parallel.
@@ -38,8 +38,13 @@ func (p parallelMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output
 	output = make(map[K]T)
 	maps.Copy(output, input)
 
-	wg := sync.WaitGroup{}
-	wg.Add(len(input))
+	type result struct {
+		key    K
+		output T
+		err    error
+	}
+
+	results := make(chan result, len(input))
 	runKey := func(k K, in T) {
 		logger.Debugf(pCtx, "chain: running key `%v`", k)
 		c := logger.WithRunnerDepth(ctx, fmt.Sprintf("%s[%v]/%s", p.name, k, p.action.Name()))
@@ -51,9 +56,11 @@ func (p parallelMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output
 				logger.Errorf(pCtx, "chain: panic occurred on running key %v, caused by %v", k, panicErr)
 				debug.PrintStack()
 
-				output[k] = in
-				err = internalErrors.NewPanicError(runnerName, panicErr)
-				wg.Done()
+				results <- result{
+					key:    k,
+					output: in,
+					err:    internalErrors.NewPanicError(runnerName, panicErr),
+				}
 				return
 			}
 		}()
@@ -61,15 +68,22 @@ func (p parallelMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output
 		out, e := p.action.Run(c, in)
 		if e != nil {
 			logger.Errorf(pCtx, "chain: error occurred in key `%v`: %v", k, e)
-			err = e
 		}
-		output[k] = out
-		wg.Done()
+		results <- result{
+			key:    k,
+			output: out,
+			err:    e,
+		}
 	}
 	for k, in := range input {
 		go runKey(k, in)
 	}
-	wg.Wait()
+
+	for range len(input) {
+		r := <-results
+		output[r.key] = r.output
+		err = errors.Join(err, r.err)
+	}
 
 	return output, err
 }

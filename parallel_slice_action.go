@@ -2,11 +2,11 @@ package chain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"runtime/debug"
-	"sync"
 )
 
 // AsParallelSliceAction creates an Action that processes a slice's elements in parallel.
@@ -37,8 +37,13 @@ func (p parallelSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 	output = make([]T, len(input))
 	copy(output, input)
 
-	wg := sync.WaitGroup{}
-	wg.Add(len(input))
+	type result struct {
+		index  int
+		output T
+		err    error
+	}
+
+	results := make(chan result, len(input))
 	runIndex := func(i int, in T) {
 		logger.Debugf(pCtx, "chain: running index %d", i)
 
@@ -51,9 +56,11 @@ func (p parallelSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 				logger.Errorf(pCtx, "chain: panic occurred on running index %d, caused by %v", i, panicErr)
 				debug.PrintStack()
 
-				output[i] = in
-				err = internalErrors.NewPanicError(runnerName, panicErr)
-				wg.Done()
+				results <- result{
+					index:  i,
+					output: in,
+					err:    internalErrors.NewPanicError(runnerName, panicErr),
+				}
 				return
 			}
 		}()
@@ -61,15 +68,22 @@ func (p parallelSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 		out, e := p.action.Run(c, in)
 		if e != nil {
 			logger.Errorf(pCtx, "chain: error occurred in index %d: %v", i, e)
-			err = e
 		}
-		output[i] = out
-		wg.Done()
+		results <- result{
+			index:  i,
+			output: out,
+			err:    e,
+		}
 	}
 	for i, in := range input {
 		go runIndex(i, in)
 	}
-	wg.Wait()
+
+	for range len(input) {
+		r := <-results
+		output[r.index] = r.output
+		err = errors.Join(err, r.err)
+	}
 
 	return output, err
 }
