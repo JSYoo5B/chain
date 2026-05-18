@@ -23,6 +23,17 @@ func TestWorkflow_ValidateGraph(t *testing.T) {
 	}
 
 	testCases := map[string]testCase{
+		"valid single node graph": {
+			workflowConstructor: func() *Workflow[int] {
+				a1 := newAction("1")
+
+				workflow := NewWorkflow("workflow", a1)
+				// (1)
+				workflow.SetRunPlan(a1, TerminationPlan[int]())
+
+				return workflow
+			},
+		},
 		"valid linear graph when initAction is not entry node": {
 			workflowConstructor: func() *Workflow[int] {
 				a1 := newAction("1")
@@ -53,6 +64,62 @@ func TestWorkflow_ValidateGraph(t *testing.T) {
 
 				return workflow
 			},
+		},
+		"valid multiple directions pointing to same node": {
+			workflowConstructor: func() *Workflow[int] {
+				a1 := newAction("1")
+				a2 := newAction("2")
+
+				workflow := NewWorkflow("workflow", a1, a2)
+				// (1) -success-> 2
+				// (1) -failure-> 2
+				workflow.SetRunPlan(a1, DefaultPlan(a2, a2))
+				workflow.SetRunPlan(a2, TerminationPlan[int]())
+
+				return workflow
+			},
+		},
+		"valid branch and merge graph": {
+			workflowConstructor: func() *Workflow[int] {
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
+				a4 := newAction("4")
+
+				workflow := NewWorkflow("workflow", a1, a2, a3, a4)
+				// (1) -> 2 ----> 4
+				// (1) ----> 3 -> 4
+				workflow.SetRunPlan(a1, DefaultPlan(a2, a3))
+				workflow.SetRunPlan(a2, SuccessOnlyPlan(a4))
+				workflow.SetRunPlan(a3, SuccessOnlyPlan(a4))
+				workflow.SetRunPlan(a4, TerminationPlan[int]())
+
+				return workflow
+			},
+		},
+		"valid weakly connected graph by common upstream action": {
+			workflowConstructor: func() *Workflow[int] {
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
+				a4 := newAction("4")
+
+				workflow := NewWorkflow("workflow", a1, a2, a3, a4)
+				// 2 -> (1)
+				// 2 ----> 3
+				// 2 --------> 4
+				workflow.SetRunPlan(a1, TerminationPlan[int]())
+				workflow.SetRunPlan(a2, RunPlan[int]{
+					Success: a1,
+					Failure: a3,
+					Abort:   a4,
+				})
+				workflow.SetRunPlan(a3, TerminationPlan[int]())
+				workflow.SetRunPlan(a4, TerminationPlan[int]())
+
+				return workflow
+			},
+			repetitions: 100,
 		},
 		"cycle": {
 			workflowConstructor: func() *Workflow[int] {
@@ -88,6 +155,24 @@ func TestWorkflow_ValidateGraph(t *testing.T) {
 			},
 			expectedErrContains: []string{"cycle"},
 		},
+		"cycle outside initAction directed path": {
+			workflowConstructor: func() *Workflow[int] {
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
+
+				workflow := NewWorkflow("workflow", a1, a2, a3)
+				// 2 -> (1)
+				// 2 ----> 3
+				// 2 <---- 3
+				workflow.SetRunPlan(a1, TerminationPlan[int]())
+				workflow.SetRunPlan(a2, DefaultPlan(a1, a3))
+				workflow.SetRunPlan(a3, SuccessOnlyPlan(a2))
+
+				return workflow
+			},
+			expectedErrContains: []string{"cycle"},
+		},
 		"disconnected graph": {
 			workflowConstructor: func() *Workflow[int] {
 				a1 := newAction("1")
@@ -104,7 +189,23 @@ func TestWorkflow_ValidateGraph(t *testing.T) {
 
 				return workflow
 			},
-			expectedErrContains: []string{"disconnect"},
+			expectedErrContains: []string{"disconnected graph"},
+		},
+		"disconnected graph with isolated node": {
+			workflowConstructor: func() *Workflow[int] {
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
+
+				workflow := NewWorkflow("workflow", a1, a2, a3)
+				// (1) -> 2 | 3
+				workflow.SetRunPlan(a1, SuccessOnlyPlan(a2))
+				workflow.SetRunPlan(a2, TerminationPlan[int]())
+				workflow.SetRunPlan(a3, TerminationPlan[int]())
+
+				return workflow
+			},
+			expectedErrContains: []string{"disconnected graph"},
 		},
 		"disconnected graph with cycle": {
 			workflowConstructor: func() *Workflow[int] {
@@ -121,7 +222,7 @@ func TestWorkflow_ValidateGraph(t *testing.T) {
 
 				return workflow
 			},
-			expectedErrContains: []string{"cycle", "disconnect"},
+			expectedErrContains: []string{"cycle", "disconnected graph"},
 		},
 	}
 
