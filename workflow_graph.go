@@ -2,89 +2,130 @@ package chain
 
 import "fmt"
 
+type node[T any] = Action[T]
+type runPlanGraph[T any] = map[node[T]]RunPlan[T]
+type connectivityGraph[T any] = map[node[T]][]node[T]
+type cycleVisitMap[T any] = map[node[T]]int
+type connectedNodeMap[T any] = map[node[T]]bool
+type edgeDirection = string
+type cycleTrace = []string
+
 // ValidateGraph ensures the workflow's graph is connected and acyclic.
 // It checks for cycles first, then verifies that all nodes are connected as a single graph.
 func (w *Workflow[T]) ValidateGraph() error {
-	// Step 1: Perform DFS from initAction to check for cycles and track visited nodes
-	visited := make(map[Action[T]]int)
-	if err := dfsWithCycleCheck(w.initAction, w.runPlans, visited, []string{}); err != nil {
-		return err
-	}
+	runPlans := runPlanGraph[T](w.runPlans)
 
-	// Step 2: After DFS, check if all actions have been visited
-	unvisited := make([]Action[T], 0, len(w.runPlans))
-	for action := range w.runPlans {
-		if visited[action] == notVisited {
-			unvisited = append(unvisited, action)
+	// Step 1: Check every run plan graph component for cycles.
+	// Cycle validation must use edge direction and must scan every node because
+	// a disconnected subgraph can still contain a cycle.
+	visited := make(cycleVisitMap[T])
+	for currentNode := range runPlans {
+		if visited[currentNode] != notVisited {
+			continue
 		}
-	}
-
-	// Step 3: If there are unvisited nodes, start new DFS from them
-	for len(unvisited) > 0 {
-		newStart := unvisited[0] // Pick any unvisited node
-		visitedFromNewStart := make(map[Action[T]]int)
-		if err := dfsWithCycleCheck(newStart, w.runPlans, visitedFromNewStart, []string{}); err != nil {
+		if err := dfsWithCycleCheck(currentNode, runPlans, visited, cycleTrace{}); err != nil {
 			return err
 		}
+	}
 
-		// Step 4: Merge the visited nodes from the current traversal into the overall visited set
-		// If the current traversal's visited nodes intersect with the previously visited ones, they are connected
-		// If there is no intersection, it's a disconnected graph.
-		intersectionFound := false
-		for action := range visitedFromNewStart {
-			if visited[action] != notVisited {
-				intersectionFound = true
-			}
-			visited[action] = confirmed
-		}
+	// Step 2: Check that all nodes form one graph.
+	// At this point, directed cycle validation is already done. For connectivity,
+	// we only need weak connectivity: whether every node belongs to the same
+	// connected component when edge directions and direction labels are ignored.
+	connected := make(connectedNodeMap[T], len(runPlans))
+	connectivity := buildConnectivityGraph(runPlans)
 
-		// Step 5: If no intersection found, it means the graph is disconnected
-		if !intersectionFound {
-			return fmt.Errorf("disconnect detected: action `%s` cannot reach the graph started from initAction `%s`", newStart.Name(), w.initAction.Name())
+	// initAction is one of the workflow nodes. In a single connected graph,
+	// starting from any node should be enough to visit every other node.
+	traverseConnectedNodes(w.initAction, connectivity, connected)
+	for currentNode := range runPlans {
+		// A node left unvisited here belongs to a different connected component,
+		// so the workflow is not a single graph.
+		if !connected[currentNode] {
+			return fmt.Errorf("disconnected graph detected: action `%s` is not connected to initAction `%s`", currentNode.Name(), w.initAction.Name())
 		}
-
-		// Step 6: Check all nodes have been visited, no need for further checks
-		if len(visited) == len(w.runPlans) {
-			return nil
-		}
-
-		// If there are still unvisited nodes, continue to the next round of DFS
-		stillUnvisited := make([]Action[T], 0, len(unvisited))
-		for _, action := range unvisited {
-			if visited[action] == notVisited {
-				stillUnvisited = append(stillUnvisited, action)
-			}
-		}
-		unvisited = stillUnvisited
 	}
 
 	return nil
 }
 
-func dfsWithCycleCheck[T any](node Action[T], graph map[Action[T]]RunPlan[T], visited map[Action[T]]int, path []string) error {
-	path = append(path, "`"+node.Name()+"`")
+func dfsWithCycleCheck[T any](currentNode node[T], runPlans runPlanGraph[T], visited cycleVisitMap[T], path cycleTrace) error {
+	path = append(path, "`"+currentNode.Name()+"`")
 
-	if visited[node] != notVisited {
+	// This is a 3-color DFS:
+	// - notVisited: this node has not been inspected yet.
+	// - visiting: this node is in the current DFS stack.
+	// - confirmed: every downstream path from this node has already been checked.
+	// Reaching a visiting node means the current path points back to one of its
+	// ancestors, so the directed graph has a cycle. Reaching a confirmed node is
+	// safe because it is just a previously verified path, which is valid in DAGs
+	// where branches merge back into the same node.
+	if visited[currentNode] == visiting {
 		return fmt.Errorf("cycle detected: %v", path)
+	} else if visited[currentNode] == confirmed {
+		return nil
 	}
 
-	visited[node] = visiting
+	visited[currentNode] = visiting
 
 	terminate := Terminate[T]()
-	for direction, nextAction := range graph[node] {
-		if nextAction != terminate {
-			edge := "-" + direction + "->"
+	for direction, nextNode := range runPlans[currentNode] {
+		if nextNode != terminate {
+			edge := formatEdge(direction)
 			path = append(path, edge)
-			if err := dfsWithCycleCheck(nextAction, graph, visited, path); err != nil {
+			if err := dfsWithCycleCheck(nextNode, runPlans, visited, path); err != nil {
 				return err
 			}
 			path = path[:len(path)-1]
 		}
 	}
 
-	visited[node] = confirmed
+	visited[currentNode] = confirmed
 
 	return nil
+}
+
+func formatEdge(direction edgeDirection) string {
+	return "-" + direction + "->"
+}
+
+func buildConnectivityGraph[T any](runPlans runPlanGraph[T]) connectivityGraph[T] {
+	connectivity := make(connectivityGraph[T], len(runPlans))
+	terminate := Terminate[T]()
+
+	for currentNode, plan := range runPlans {
+		if _, exists := connectivity[currentNode]; !exists {
+			connectivity[currentNode] = nil
+		}
+
+		// Connectivity only needs to know whether two nodes are connected, so
+		// `current -> next` is expanded as `current <-> next`. Direction labels
+		// such as success/failure/abort are intentionally dropped.
+		for _, nextNode := range plan {
+			if nextNode == terminate {
+				continue
+			}
+
+			connectivity[currentNode] = append(connectivity[currentNode], nextNode)
+			connectivity[nextNode] = append(connectivity[nextNode], currentNode)
+		}
+	}
+
+	return connectivity
+}
+
+func traverseConnectedNodes[T any](currentNode node[T], connectivity connectivityGraph[T], visited connectedNodeMap[T]) {
+	if visited[currentNode] {
+		return
+	}
+
+	// Walk the derived connectivity graph by expanding through both original
+	// incoming and outgoing edges, because buildConnectivityGraph made every
+	// non-termination edge bidirectional.
+	visited[currentNode] = true
+	for _, nextNode := range connectivity[currentNode] {
+		traverseConnectedNodes(nextNode, connectivity, visited)
+	}
 }
 
 const (
