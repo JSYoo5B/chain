@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
@@ -76,12 +77,25 @@ func (r retryableAction[T]) Run(ctx context.Context, input T) (output T, err err
 
 		if r.rollbackAction != nil && attempt < r.maxRetry {
 			logger.Debugf(pCtx, "chain: rolling back with %s", r.rollbackAction.Name())
-			output, err = r.rollbackAction.Run(rCtx, output)
-			if err != nil {
-				return output, fmt.Errorf("rolling back failed: %w", err)
+			var rollbackErr error
+			output, rollbackErr = runRollbackAction(rCtx, r.rollbackAction, output)
+			if rollbackErr != nil {
+				return output, errors.Join(err, fmt.Errorf("rolling back failed: %w", rollbackErr))
 			}
 		}
 	}
 
 	return output, err
+}
+
+func runRollbackAction[T any](ctx context.Context, rollbackAction Action[T], input T) (output T, err error) {
+	output = input
+	runnerName, _ := logger.RunnerNameFromContext(ctx)
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			err = internalErrors.NewPanicError(runnerName, panicErr)
+		}
+	}()
+
+	return rollbackAction.Run(ctx, input)
 }
