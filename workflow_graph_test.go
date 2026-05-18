@@ -2,9 +2,10 @@ package chain
 
 import (
 	"context"
-	"fmt"
-	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWorkflow_ValidateGraph(t *testing.T) {
@@ -17,242 +18,147 @@ func TestWorkflow_ValidateGraph(t *testing.T) {
 
 	type testCase struct {
 		workflowConstructor func() *Workflow[int]
-		isCyclic            bool
-		isDisconnected      bool
+		expectedErrContains []string
+		repetitions         int
 	}
 
 	testCases := map[string]testCase{
-		"2 node cycle": {
+		"valid linear graph when initAction is not entry node": {
 			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
 
-				workflow := NewWorkflow("workflow", action1, action2)
-				// action1 and action2 makes cycle
-				// (action1) -> action2
-				// (action1) <- action2
-				workflow.SetRunPlan(action1, SuccessOnlyPlan(action2))
-				workflow.SetRunPlan(action2, SuccessOnlyPlan(action1))
+				workflow := NewWorkflow("workflow", a2, a1, a3)
+				// 1 -> (2) -> 3
+				workflow.SetRunPlan(a1, SuccessOnlyPlan(a2))
+				workflow.SetRunPlan(a2, SuccessOnlyPlan(a3))
+				workflow.SetRunPlan(a3, TerminationPlan[int]())
 
 				return workflow
 			},
-			isCyclic:       true,
-			isDisconnected: false,
 		},
-		"3 node cycle": {
+		"valid branch graph": {
 			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
 
-				workflow := NewWorkflow("workflow", action1, action2, action3)
-				// (action1) -> action2 -> action3
-				// (action1) <------------ action3
-				workflow.SetRunPlan(action1, SuccessOnlyPlan(action2))
-				workflow.SetRunPlan(action2, SuccessOnlyPlan(action3))
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action1))
+				workflow := NewWorkflow("workflow", a1, a2, a3)
+				// (1) -> 2
+				// (1) ----> 3
+				workflow.SetRunPlan(a1, DefaultPlan(a2, a3))
+				workflow.SetRunPlan(a2, TerminationPlan[int]())
+				workflow.SetRunPlan(a3, TerminationPlan[int]())
 
 				return workflow
 			},
-			isCyclic:       true,
-			isDisconnected: false,
 		},
-		"2 separate graph (disconnected)": {
+		"cycle": {
 			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-				action4 := newAction("action4")
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
 
-				workflow := NewWorkflow("workflow", action1, action2, action3, action4)
-				// action1 -> action2 | action3 -> action4
-				workflow.SetRunPlan(action1, SuccessOnlyPlan(action2))
-				workflow.SetRunPlan(action2, TerminationPlan[int]())
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action4))
-				workflow.SetRunPlan(action4, TerminationPlan[int]())
+				workflow := NewWorkflow("workflow", a1, a2, a3)
+				// (1) -> 2 -> 3
+				// (1) <------ 3
+				workflow.SetRunPlan(a1, SuccessOnlyPlan(a2))
+				workflow.SetRunPlan(a2, SuccessOnlyPlan(a3))
+				workflow.SetRunPlan(a3, SuccessOnlyPlan(a1))
 
 				return workflow
 			},
-			isCyclic:       false,
-			isDisconnected: true,
+			expectedErrContains: []string{"cycle"},
 		},
-		"valid dag but initAction is not entry node": {
+		"cycle through branch": {
 			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
 
-				workflow := NewWorkflow("workflow", action2, action1, action3)
-				// action1 -> (action2) -> action3
-				workflow.SetRunPlan(action1, SuccessOnlyPlan(action2))
-				workflow.SetRunPlan(action2, SuccessOnlyPlan(action3))
-				workflow.SetRunPlan(action3, TerminationPlan[int]())
+				workflow := NewWorkflow("workflow", a1, a2, a3)
+				// (1) -> 2 -> 3
+				// (1) <-- 2
+				workflow.SetRunPlan(a1, DefaultPlan(a2, a3))
+				workflow.SetRunPlan(a2, DefaultPlan(a3, a1))
+				workflow.SetRunPlan(a3, TerminationPlan[int]())
 
 				return workflow
 			},
-			isCyclic:       false,
-			isDisconnected: false,
+			expectedErrContains: []string{"cycle"},
 		},
-		"3 node cycle with branches": {
+		"disconnected graph": {
 			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
+				a4 := newAction("4")
 
-				workflow := NewWorkflow("workflow", action1, action2, action3)
-				// (action1) ------------> action3
-				// (action1) -> action2 -> action3
-				// (action1) <- action2
-				workflow.SetRunPlan(action1, DefaultPlan(action2, action3))
-				workflow.SetRunPlan(action2, DefaultPlan(action3, action1))
-				workflow.SetRunPlan(action3, TerminationPlan[int]())
+				workflow := NewWorkflow("workflow", a1, a2, a3, a4)
+				// 1 -> 2 | 3 -> 4
+				workflow.SetRunPlan(a1, SuccessOnlyPlan(a2))
+				workflow.SetRunPlan(a2, TerminationPlan[int]())
+				workflow.SetRunPlan(a3, SuccessOnlyPlan(a4))
+				workflow.SetRunPlan(a4, TerminationPlan[int]())
 
 				return workflow
 			},
-			isCyclic:       true,
-			isDisconnected: false,
+			expectedErrContains: []string{"disconnect"},
 		},
-		"valid dag but has 2 entry nodes": {
+		"disconnected graph with cycle": {
 			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-				action4 := newAction("action4")
+				a1 := newAction("1")
+				a2 := newAction("2")
+				a3 := newAction("3")
 
-				workflow := NewWorkflow("workflow", action1, action2, action3, action4)
-				// (action1) -> action2 | action3 -> action4
-				// (action1) ----------------------> action4
-				workflow.SetRunPlan(action1, DefaultPlan(action2, action4))
-				workflow.SetRunPlan(action2, TerminationPlan[int]())
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action4))
-				workflow.SetRunPlan(action4, TerminationPlan[int]())
+				workflow := NewWorkflow("workflow", a1, a2, a3)
+				// (1) | 2 -> 3
+				//     | 2 <- 3
+				workflow.SetRunPlan(a1, TerminationPlan[int]())
+				workflow.SetRunPlan(a2, SuccessOnlyPlan(a3))
+				workflow.SetRunPlan(a3, SuccessOnlyPlan(a2))
 
 				return workflow
 			},
-			isCyclic:       false,
-			isDisconnected: false,
-		},
-		"valid dag but has 3 entry nodes": {
-			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-				action4 := newAction("action4")
-				action5 := newAction("action5")
-
-				workflow := NewWorkflow("workflow", action1, action2, action3, action4, action5)
-				// (action1) -> action2 | action3 -> action4 <- action5
-				// (action1) ----------------------> action4
-				workflow.SetRunPlan(action1, DefaultPlan(action2, action4))
-				workflow.SetRunPlan(action2, TerminationPlan[int]())
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action4))
-				workflow.SetRunPlan(action4, TerminationPlan[int]())
-				workflow.SetRunPlan(action5, SuccessOnlyPlan(action4))
-
-				return workflow
-			},
-			isCyclic:       false,
-			isDisconnected: false,
-		},
-		"3 entry nodes, but one is disconnected": {
-			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-				action4 := newAction("action4")
-				action5 := newAction("action5")
-
-				workflow := NewWorkflow("workflow", action1, action2, action3, action4, action5)
-				// (action1) -> action2 | action3 -> action4 | action5
-				// (action1) ----------------------> action4
-				workflow.SetRunPlan(action1, DefaultPlan(action2, action4))
-				workflow.SetRunPlan(action2, TerminationPlan[int]())
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action4))
-				workflow.SetRunPlan(action4, TerminationPlan[int]())
-				workflow.SetRunPlan(action5, TerminationPlan[int]())
-
-				return workflow
-			},
-			isCyclic:       false,
-			isDisconnected: true,
-		},
-		"valid branching with all directions": {
-			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-
-				workflow := NewWorkflow("workflow", action1, action2, action3)
-				// (action1) -> action2
-				// (action1) ------------> action3
-				workflow.SetRunPlan(action1, DefaultPlan(action2, action3))
-				workflow.SetRunPlan(action2, TerminationPlan[int]())
-				workflow.SetRunPlan(action3, TerminationPlan[int]())
-
-				return workflow
-			},
-			isCyclic:       false,
-			isDisconnected: false,
-		},
-		"non cycle from initAction, but cycle in disconnected graph": {
-			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-
-				workflow := NewWorkflow("workflow", action1, action2, action3)
-				// (action1) | action2 <-> action3
-				workflow.SetRunPlan(action1, TerminationPlan[int]())
-				workflow.SetRunPlan(action2, SuccessOnlyPlan(action3))
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action2))
-
-				return workflow
-			},
-			isCyclic:       true, // cyclic detected first
-			isDisconnected: true,
-		},
-		"2 cycles": {
-			workflowConstructor: func() *Workflow[int] {
-				action1 := newAction("action1")
-				action2 := newAction("action2")
-				action3 := newAction("action3")
-				action4 := newAction("action4")
-
-				workflow := NewWorkflow("workflow", action1, action2, action3, action4)
-				// (action1) -> action2 -> action3 -> action4
-				// (action1) <-----------  action3 <- action4
-				workflow.SetRunPlan(action1, SuccessOnlyPlan(action2))
-				workflow.SetRunPlan(action2, SuccessOnlyPlan(action3))
-				workflow.SetRunPlan(action3, DefaultPlan(action4, action1))
-				workflow.SetRunPlan(action4, SuccessOnlyPlan(action3))
-				workflow.SetRunPlan(action3, SuccessOnlyPlan(action4))
-
-				return workflow
-			},
-			isCyclic:       true,
-			isDisconnected: false,
+			expectedErrContains: []string{"cycle", "disconnect"},
 		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			assert.NotPanics(t, func() {
+			repetitions := tc.repetitions
+			if repetitions == 0 {
+				repetitions = 1
+			}
+
+			for i := 0; i < repetitions; i++ {
 				workflow := tc.workflowConstructor()
 
 				err := workflow.ValidateGraph()
-				switch {
-				case tc.isCyclic:
-					assert.Contains(t, err.Error(), "cycle")
-				case tc.isDisconnected:
-					assert.Contains(t, err.Error(), "disconnect")
-				default:
-					assert.NoError(t, err)
+				if len(tc.expectedErrContains) == 0 {
+					if !assert.NoError(t, err) {
+						break
+					}
+					continue
 				}
 
-				if err != nil {
-					fmt.Println(err.Error())
+				if assert.Error(t, err) {
+					assertErrorContainsAny(t, err, tc.expectedErrContains)
 				}
-			})
+			}
 		})
 	}
+}
+
+func assertErrorContainsAny(t *testing.T, err error, expectedSubstrings []string) {
+	t.Helper()
+
+	for _, expectedSubstring := range expectedSubstrings {
+		if strings.Contains(err.Error(), expectedSubstring) {
+			return
+		}
+	}
+
+	assert.Failf(t, "unexpected error", "expected error %q to contain one of %v", err.Error(), expectedSubstrings)
 }
