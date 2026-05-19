@@ -54,6 +54,27 @@ func TestSequenceMapAction(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, expected, output)
 	})
+	t.Run("multiple errors in iteration are joined", func(t *testing.T) {
+		onlyPositive := NewSimpleAction(
+			"onlyPositive",
+			func(_ context.Context, input int) (int, error) {
+				if input < 0 {
+					return 0, errors.New("negative input")
+				}
+				return input, nil
+			})
+		action := AsSequenceMapAction[string, int]("Sequence", onlyPositive)
+		input := map[string]int{"one": 1, "minusOne": -1, "two": 2, "minusTwo": -2}
+		expected := map[string]int{"one": 1, "minusOne": 0, "two": 2, "minusTwo": 0}
+
+		output, err := action.Run(context.Background(), input)
+
+		assert.Error(t, err)
+		assert.Equal(t, expected, output)
+		assert.Contains(t, err.Error(), "key `minusOne`")
+		assert.Contains(t, err.Error(), "key `minusTwo`")
+		assert.Contains(t, err.Error(), "negative input")
+	})
 	t.Run("panic in iteration", func(t *testing.T) {
 		divides := AsSequenceMapAction[string, int]("MapDivide10", divide10)
 		input := map[string]int{"ten": 10, "five": 5, "two": 2, "zero": 0, "one": 1}
