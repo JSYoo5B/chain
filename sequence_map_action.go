@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
@@ -43,7 +44,7 @@ func (s sequenceMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output
 			logger.Errorf(pCtx, "chain: panic occurred on running, caused by %v", panicErr)
 			debug.PrintStack()
 
-			err = internalErrors.NewPanicError(runnerName, panicErr)
+			err = errors.Join(err, internalErrors.NewPanicError(runnerName, panicErr))
 		}
 	}()
 
@@ -56,7 +57,7 @@ func (s sequenceMapAction[K, T]) Run(ctx context.Context, input map[K]T) (output
 		out, e := s.action.Run(c, in)
 		if e != nil {
 			logger.Errorf(pCtx, "chain: error occurred in key `%v`: %v", k, e)
-			err = e
+			err = errors.Join(err, fmt.Errorf("error occurred at key `%v`: %w", k, e))
 		}
 		output[k] = out
 	}

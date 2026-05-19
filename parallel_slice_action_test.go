@@ -3,6 +3,7 @@ package chain
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/JSYoo5B/chain/internal/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -52,6 +53,50 @@ func TestParallelSliceAction(t *testing.T) {
 		output, err := doubles.Run(context.Background(), input)
 
 		assert.Error(t, err)
+		assert.Equal(t, expected, output)
+	})
+	t.Run("multiple errors are joined", func(t *testing.T) {
+		failSmallNumbers := NewSimpleAction(
+			"failSmallNumbers",
+			func(_ context.Context, input int) (int, error) {
+				if input < 2 {
+					return input, fmt.Errorf("bad input: %d", input)
+				}
+				return input * 2, nil
+			})
+		doubles := AsParallelSliceAction("MapDoubleWithErrors", failSmallNumbers)
+		input := []int{0, 1, 2, 3}
+		expected := []int{0, 1, 4, 6}
+
+		output, err := doubles.Run(context.Background(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "bad input: 0")
+		assert.Contains(t, err.Error(), "bad input: 1")
+		assert.Equal(t, expected, output)
+	})
+	t.Run("panic and error are joined", func(t *testing.T) {
+		failAndPanic := NewSimpleAction(
+			"failAndPanic",
+			func(_ context.Context, input int) (int, error) {
+				switch input {
+				case 0:
+					return input, fmt.Errorf("bad input: %d", input)
+				case 1:
+					panic("panic input: 1")
+				default:
+					return input * 2, nil
+				}
+			})
+		doubles := AsParallelSliceAction("MapDoubleWithPanicAndError", failAndPanic)
+		input := []int{0, 1, 2}
+		expected := []int{0, 1, 4}
+
+		output, err := doubles.Run(context.Background(), input)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "bad input: 0")
+		assert.Contains(t, err.Error(), "panic input: 1")
 		assert.Equal(t, expected, output)
 	})
 	t.Run("panic in parallel iteration", func(t *testing.T) {

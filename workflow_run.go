@@ -30,7 +30,7 @@ func (w *Workflow[T]) Run(ctx context.Context, input T) (output T, err error) {
 // the plan specifies otherwise.
 // If no action plan is found for a given direction,
 // the Workflow will terminate with the appropriate error.
-func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, lastErr error) {
+func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, err error) {
 	if !isMemberActionInWorkflow(initAction, w) {
 		return input, errors.New("given initAction is not registered on constructor")
 	}
@@ -48,12 +48,15 @@ func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 	logger.Debugf(ctx, "chain: start running with `%s`", initAction.Name())
 	for currentAction = initAction; currentAction != nil; currentAction = nextAction {
 		output, direction, runErr = runAction(currentAction, ctx, input)
+		if runErr != nil {
+			err = errors.Join(err, runErr)
+		}
 
 		nextAction, selectErr = selectNextAction(w.runPlans[currentAction], currentAction, direction)
 		if selectErr != nil {
 			logger.Error(ctx, selectErr)
 			direction = Abort
-			lastErr = selectErr
+			err = errors.Join(err, selectErr)
 			break
 		}
 
@@ -64,15 +67,8 @@ func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) 
 		logger.Debugf(ctx, "chain: `%s` directs `%s`, selecting `%s`", currentAction.Name(), direction, nextActionName)
 
 		input = output
-		if runErr != nil {
-			lastErr = runErr
-		}
 	}
-	if lastErr != nil && direction != Abort {
-		direction = Failure
-	}
-
-	return output, lastErr
+	return output, err
 }
 
 func selectNextAction[T any](plan RunPlan[T], currentAction Action[T], direction string) (nextAction Action[T], err error) {

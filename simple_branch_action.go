@@ -30,10 +30,13 @@ func NewSimpleBranchAction[T any](name string, runFunc RunFunc[T], directions []
 	if runFunc == nil {
 		runFunc = func(_ context.Context, input T) (T, error) { return input, nil }
 	}
+	copiedDirections := make([]string, len(directions))
+	copy(copiedDirections, directions)
+
 	return &simpleBranchAction[T]{
 		name:       name,
 		runFunc:    runFunc,
-		directions: directions,
+		directions: copiedDirections,
 		branchFunc: branchFunc,
 	}
 }
@@ -45,8 +48,12 @@ type simpleBranchAction[T any] struct {
 	branchFunc BranchFunc[T]
 }
 
-func (s simpleBranchAction[T]) Name() string         { return s.name }
-func (s simpleBranchAction[T]) Directions() []string { return s.directions }
+func (s simpleBranchAction[T]) Name() string { return s.name }
+func (s simpleBranchAction[T]) Directions() []string {
+	directions := make([]string, len(s.directions))
+	copy(directions, s.directions)
+	return directions
+}
 func (s simpleBranchAction[T]) Run(ctx context.Context, input T) (output T, err error) {
 	return s.runFunc(ctx, input)
 }

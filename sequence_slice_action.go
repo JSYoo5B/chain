@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	internalErrors "github.com/JSYoo5B/chain/internal/errors"
 	"github.com/JSYoo5B/chain/internal/logger"
@@ -46,7 +47,7 @@ func (s sequenceSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 			logger.Errorf(pCtx, "chain: panic occurred on running, caused by %v", panicErr)
 			debug.PrintStack()
 
-			err = internalErrors.NewPanicError(runnerName, panicErr)
+			err = errors.Join(err, internalErrors.NewPanicError(runnerName, panicErr))
 		}
 	}()
 
@@ -61,11 +62,11 @@ func (s sequenceSliceAction[T]) Run(ctx context.Context, input []T) (output []T,
 		if e != nil {
 			if s.stopOnError {
 				logger.Errorf(pCtx, "chain: stopping after error in index %d", i)
-				return output, e
+				return output, fmt.Errorf("error occurred at index %d: %w", i, e)
 
 			} else {
 				logger.Errorf(pCtx, "chain: error occurred in index %d: %v", i, e)
-				err = e
+				err = errors.Join(err, fmt.Errorf("error occurred at index %d: %w", i, e))
 			}
 		}
 	}

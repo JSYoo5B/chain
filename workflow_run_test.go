@@ -2,8 +2,10 @@ package chain
 
 import (
 	"context"
+	"errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 )
 
@@ -131,4 +133,27 @@ func TestPanicPropagation(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestWorkflow_RunAtErrorAggregation(t *testing.T) {
+	firstErr := errors.New("first action failed")
+	secondErr := errors.New("second action failed")
+	first := NewSimpleAction(
+		"first",
+		func(_ context.Context, input int) (int, error) { return input + 1, firstErr },
+	)
+	second := NewSimpleAction(
+		"second",
+		func(_ context.Context, input int) (int, error) { return input + 1, secondErr },
+	)
+	workflow := NewWorkflow("workflow", first, second)
+	workflow.SetRunPlan(first, RunPlan[int]{Failure: second})
+
+	output, err := workflow.Run(context.Background(), 0)
+
+	assert.Error(t, err)
+	assert.Equal(t, 2, output)
+	assert.Contains(t, err.Error(), firstErr.Error())
+	assert.Contains(t, err.Error(), secondErr.Error())
+	assert.Less(t, strings.Index(err.Error(), firstErr.Error()), strings.Index(err.Error(), secondErr.Error()))
 }
