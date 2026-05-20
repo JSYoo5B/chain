@@ -4,22 +4,18 @@ import "context"
 
 // BranchFunc represents the signature for the function that defines the branching logic
 // for a BranchAction in the package. It takes the running context and output as input
-// and returns the direction for the next step in the process along with any potential error.
+// and returns the direction for the next step along with any error.
 type BranchFunc[T any] func(ctx context.Context, output T) (direction string, err error)
 
 // NewSimpleBranchAction creates a new BranchAction with customizable directions.
-// It accepts a name for the action, a slice of directions that define the possible control flow,
-// and a BranchFunc that contains the branching logic, which dictates the next direction
-// based on the action's output.
+// It accepts a name, custom directions, and a BranchFunc that selects the next
+// direction from the action's output.
 //
-// Additionally, a custom runFunc can be provided to define the execution logic of the action.
-// This function must match the RunFunc signature, where T is the generic type representing
-// the input and output types for the action. If no specific execution logic is needed, the
-// runFunc can be provided as `nil`. In this case, the action will simply pass the input
-// through to the output without modification.
+// A custom runFunc can be provided to define execution logic. If runFunc is nil,
+// the action passes the input through as output.
 //
-// This allows for the creation of simple BranchActions without manually defining a separate struct
-// that implements the BranchAction interface.
+// This allows simple BranchActions to be created without manually defining a
+// struct that implements BranchAction.
 func NewSimpleBranchAction[T any](name string, runFunc RunFunc[T], directions []string, branchFunc BranchFunc[T]) BranchAction[T] {
 	if len(directions) == 0 {
 		panic("directions cannot be empty")

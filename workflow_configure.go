@@ -5,15 +5,13 @@ import (
 	"fmt"
 )
 
-// Workflow represents a sequence of Actions that are executed in a structured flow.
+// Workflow represents Actions connected by direction-based run plans.
 // It executes each of its constituent Actions in sequence, with each Action following its
 // own Run method. The flow proceeds based on the defined structure of the Workflow,
 // allowing flexible and organized execution of actions to build workflows that can be
 // as simple or complex as needed.
 //
-// Workflow implements the Action interface, meaning it can be treated as an Action itself.
-// This allows Workflows to be composed hierarchically, enabling more complex workflows by nesting
-// Workflows within other Workflows.
+// Workflow implements Action, so it can be nested inside another Workflow.
 type Workflow[T any] struct {
 	name       string
 	runPlans   map[Action[T]]RunPlan[T]
@@ -21,8 +19,8 @@ type Workflow[T any] struct {
 }
 
 // NewWorkflow creates a new Workflow by taking a series of Actions as its members.
-// These Actions will be executed sequentially in the order they are provided, with the output
-// of one Action being passed as input to the next, forming a unidirectional flow of execution.
+// These Actions are connected through Success in the order they are provided.
+// Custom run plans can replace the default flow.
 func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 	if name == "" {
 		panic(errors.New("workflow must have a name"))
@@ -71,7 +69,7 @@ func NewWorkflow[T any](name string, memberActions ...Action[T]) *Workflow[T] {
 // SetRunPlan updates the execution flow for the given currentAction in the Workflow
 // by associating it with a specified RunPlan. The currentAction will be validated
 // to ensure it is a member of the Workflow. The RunPlan defines the directions
-// (such as Success, Failure, Abort) and their corresponding next actions in the execution flow.
+// (such as Success, Failure, Abort) and their corresponding next actions.
 //
 // If the currentAction is nil or not part of the Workflow, a panic will occur.
 // The plan can be nil, in which case the currentAction will be set to terminate

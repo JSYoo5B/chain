@@ -10,11 +10,12 @@ import (
 )
 
 // AsParallelSliceAction creates an Action that processes a slice's elements in parallel.
-// Each element is transformed by the given action concurrently, maintaining the original order.
+// Each element is transformed concurrently while output order is preserved.
 //
 // The action handles panics gracefully, continuing execution of other goroutines
 // when one fails. If any error or panic occurs, the action returns an error
 // but still provides the processed output for successful operations.
+// Errors from multiple elements are joined in completion order.
 func AsParallelSliceAction[T any](name string, action Action[T]) Action[[]T] {
 	if action == nil {
 		panic("action cannot be nil")

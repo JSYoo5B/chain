@@ -2,18 +2,15 @@ package chain
 
 import "context"
 
-// RunFunc defines the signature of a function used to implement an Action's execution logic.
-// It is a function that takes an input of type T (a generic type) and returns an output of type T
-// along with any error encountered during execution.
+// RunFunc is the function signature used by NewSimpleAction.
+// It receives an input value and returns the next value or an error.
 type RunFunc[T any] func(ctx context.Context, input T) (output T, err error)
 
 // NewSimpleAction creates a new Action with a custom Run function,
 // which can be a pure function or closure.
-// The provided runFunc must match the RunFunc signature, where T is a generic type representing
-// the input and output types for the Action's execution.
+// The provided runFunc must match the RunFunc signature.
 //
-// This allows for the creation of simple Actions without manually defining a separate struct
-// that implements the Action interface.
+// This allows simple Actions to be created without manually defining a struct.
 func NewSimpleAction[T any](name string, runFunc RunFunc[T]) Action[T] {
 	if runFunc == nil {
 		panic("runFunc cannot be nil")

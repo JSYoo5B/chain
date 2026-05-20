@@ -2,36 +2,31 @@ package chain
 
 import "context"
 
-// BranchAction is an interface for actions that control branching in the execution flow
-// of a Workflow. It extends the Action interface and adds methods for handling conditional
-// branching based on the execution results.
+// BranchAction controls workflow branching after its Run method succeeds.
+// It extends Action with custom directions and a direction selector.
 type BranchAction[T any] interface {
 	// Name returns the name of the BranchAction.
 	Name() string
 
-	// Run executes the branch action, optionally modifying the input and returning an output.
-	// If the input doesn't need changes, it can be passed through as output. The method also
-	// returns an error if the action cannot be executed successfully.
+	// Run executes the branch action.
 	Run(ctx context.Context, input T) (output T, err error)
 
-	// Directions return a list of possible directions that the Workflow can take.
-	// These directions are used for validation and must include all possible values that
-	// NextDirection can return.
+	// Directions returns custom directions that NextDirection can return.
+	// Built-in directions are already available in Workflow run plans.
 	Directions() []string
 
-	// NextDirection determines the next execution path based on the result of Run.
+	// NextDirection selects the next execution path from the Run output.
 	// It is called only if Run succeeds (err == nil).
-	// The method returns a direction from the list defined by Directions.
 	NextDirection(ctx context.Context, output T) (direction string, err error)
 }
 
 // AsBranchAction extends an existing Action with branching logic.
-// The wrapped action keeps its original Name and Run behavior, while branchFunc determines
-// the next direction from the wrapped action's output.
+// The wrapped action keeps its original Name and Run behavior, while branchFunc
+// determines the next direction from the wrapped action's output.
 //
 // The optional directions argument describes custom directions returned by branchFunc.
-// Built-in directions such as Success, Failure, and Abort are already available in Workflow
-// plans, so directions may be omitted when branchFunc only returns built-in directions.
+// Built-in directions such as Success, Failure, and Abort are already available
+// in Workflow plans.
 func AsBranchAction[T any](baseAction Action[T], branchFunc BranchFunc[T], directions ...string) BranchAction[T] {
 	copiedDirections := make([]string, len(directions))
 	copy(copiedDirections, directions)

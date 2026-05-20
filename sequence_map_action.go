@@ -11,7 +11,10 @@ import (
 )
 
 // AsSequenceMapAction creates an Action that processes a map's values sequentially.
-// Each value is transformed by the given action one at a time, maintaining the original keys.
+// Each value is transformed one at a time while output keys are preserved.
+//
+// Errors from multiple keys are joined. Map iteration order is not deterministic,
+// so callers should not depend on the order of joined errors.
 //
 // Unlike parallel processing, sequential execution stops immediately when a panic occurs,
 // leaving unprocessed values unchanged in the output.

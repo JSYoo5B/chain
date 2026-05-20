@@ -7,13 +7,13 @@ import "context"
 type InternalTypeGetter[T any, U any] func(T) U
 
 // ExternalTypeSetter updates a composite data structure (T) with a new subpart (U).
-// It reintegrates the modified part back into the structure and returns the updated structure.
+// It returns the updated composite value.
 type ExternalTypeSetter[T any, U any] func(T, U) T
 
 // AdaptAction creates an Action that works with a composite data structure (T),
 // where T is a complex type (e.g., a struct with multiple fields) and U is the
 // data type that the Action operates on. The InternalTypeGetter and ExternalTypeSetter
-// functions are used to extract U from T and re-integrate the processed result back into T.
+// functions extract U from T and write the processed result back into T.
 func AdaptAction[T any, U any](
 	action Action[U],
 	getter InternalTypeGetter[T, U],

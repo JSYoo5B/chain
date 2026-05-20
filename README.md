@@ -1,39 +1,23 @@
-# Chain: A Flexible Action-Workflow Library
+# Chain
 
-The chain package provides a flexible framework for building and executing sequential workflows of actions. It allows you to define a series of steps, each represented by an Action, which processes inputs and produces outputs. The package supports conditional branching, customizable execution paths, and error handling, enabling complex workflows with minimal boilerplate.
+`chain` is a small Go workflow library built around composable `Action`
+values. An action receives one value, returns the next value, and can be
+connected to other actions through a `Workflow`.
 
-## Features
+The package focuses on in-process workflow control. It does not try to be a
+distributed scheduler or a full parallel DAG engine.
 
-- Action and Workflow Composition  
-  Create modular, reusable units of work (`Action`) and orchestrate them into robust workflows using `Workflow`.
-
-- DAG-based Execution Plans  
-  Ensure predictable execution and robust validation with built-in cycle detection to enforce acyclic workflows.
-
-- Nested Workflows  
-  Use Workflows as actions within other Workflows, enabling modular and hierarchical workflow designs.
-
-- Conditional Branching  
-  Support for `Success`, `Failure`, `Abort` and custom direction-based branching within your execution flows.
-
-- AggregateAction Support  
-  Simplify the orchestration of complex workflows by combining `Action`s or `Workflow`s of different types into a unified control flow using AggregateAction.
-
-## Getting Started
-
-### Installation
-
-To install the chain package, use the following command:
+## Installation
 
 ```bash
 go get github.com/JSYoo5B/chain
 ```
 
-### Key Concepts
+## Core Concepts
 
-#### Action
+### Action
 
-An `Action` represents a single task in the `Workflow`. Each action can process input data and return output or an error.
+An `Action` is the basic execution unit.
 
 ```go
 type Action[T any] interface {
@@ -42,31 +26,101 @@ type Action[T any] interface {
 }
 ```
 
-#### BranchAction
-
-A `BranchAction` extends `Action` and supports conditional branching. It can change the execution flow based on the results of the action, allowing for multiple execution paths.
+Use `NewSimpleAction` when a function is enough:
 
 ```go
-type BranchAction[T any] interface {
-    Name() string
-    Run(ctx context.Context, input T) (output T, err error)
-    Directions() []string
-    NextDirection(ctx context.Context, output T) (direction string, err error)
-}
+double := chain.NewSimpleAction(
+    "double",
+    func(ctx context.Context, input int) (int, error) {
+        return input * 2, nil
+    },
+)
 ```
 
-#### Workflow
+### Workflow
 
-A `Workflow` is a sequence of `Action`s executed in order. It orchestrates the flow of data between actions and handles branching, success, error, and abort conditions.
-
-#### ActionPlan
-
-An `ActionPlan` is a map that associates a direction (e.g., success, error, abort) with the next Action to execute, defining the flow of a Workflow.
+A `Workflow` connects actions and also implements `Action`, so workflows can be
+nested inside other workflows.
 
 ```go
-type ActionPlan[T any] map[string]Action[T]
+workflow := chain.NewWorkflow("calculation", action1, action2, action3)
+
+output, err := workflow.Run(context.Background(), input)
 ```
+
+By default, actions are connected through the `Success` direction in constructor
+order. `Failure` and `Abort` terminate unless a custom `RunPlan` is set.
+
+```go
+workflow.SetRunPlan(action1, chain.DefaultPlan(action2, errorHandler))
+```
+
+### Directions and Run Plans
+
+A `RunPlan` maps a direction to the next action.
+
+```go
+type RunPlan[T any] map[string]Action[T]
+```
+
+Built-in directions are:
+
+- `Success`
+- `Failure`
+- `Abort`
+
+`BranchAction` can add custom directions.
+
+## Action Builders
+
+### Basic Actions
+
+- `NewSimpleAction` creates an action from a function.
+- `NewSimpleBranchAction` creates a branch action from functions.
+- `AsBranchAction` wraps an existing action and adds branching logic.
+
+### Error Control
+
+- `AsRetryableAction` retries a main action and optionally runs rollback before
+  the next attempt.
+- `SkipRollback` explicitly disables rollback for a retryable action.
+- `AsBestEffortAction` suppresses a non-critical action error and optionally
+  calls a fallback hook.
+
+### Collection Processing
+
+- `AsSequenceSliceAction` runs an action over a slice sequentially.
+- `AsSequenceMapAction` runs an action over a map sequentially.
+- `AsParallelSliceAction` runs an action over a slice concurrently.
+- `AsParallelMapAction` runs an action over a map concurrently.
+
+Parallel collection actions preserve output positions or keys, but joined error
+order follows completion order.
+
+### Type Adaptation
+
+- `AdaptAction` runs an action against a field or sub-value inside a larger
+  value.
+
+This is useful when a workflow carries one aggregate state type, while some
+actions only operate on one part of that state.
+
+## Validation
+
+`Workflow.ValidateGraph` checks the configured workflow graph before execution.
+
+It rejects:
+
+- directed cycles
+- disconnected workflow graphs
+
+Branching and merge points are allowed as long as the graph remains a connected
+DAG.
 
 ## Examples
 
-Practical examples for using the `chain` package will be added in future updates. Stay tuned!
+See:
+
+- [`examples/branch`](./examples/branch)
+- [`examples/adapter`](./examples/adapter)
+- [`docs/action-patterns.md`](./docs/action-patterns.md)

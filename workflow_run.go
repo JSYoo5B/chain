@@ -12,7 +12,7 @@ import (
 // Run executes the Workflow by running Actions in the order they were configured,
 // starting from the initAction, which is the first one of the memberActions provided
 // by the constructor such as NewWorkflow.
-// The actions are executed in order, passing the output of one action as input to the next.
+// Each action receives the previous action's output as input.
 func (w *Workflow[T]) Run(ctx context.Context, input T) (output T, err error) {
 	if len(w.runPlans) == 1 {
 		output, _, err = runAction(w.initAction, ctx, input)
@@ -23,11 +23,9 @@ func (w *Workflow[T]) Run(ctx context.Context, input T) (output T, err error) {
 }
 
 // RunAt starts the execution of the Workflow from a given Action (initAction).
-// It follows the action plan, executing actions sequentially based on the specified directions.
-// If an action returns an error, the Workflow will proceed to the next action according to
-// the defined plan, potentially directing the flow to an action mapped for the Failure direction.
-// The Abort direction, when encountered, will immediately halt the Workflow execution unless
-// the plan specifies otherwise.
+// It follows run plans and moves between actions by direction.
+// If an action returns an error, the Workflow proceeds through Failure.
+// Abort immediately halts execution unless the plan specifies otherwise.
 // If no action plan is found for a given direction,
 // the Workflow will terminate with the appropriate error.
 func (w *Workflow[T]) RunAt(initAction Action[T], ctx context.Context, input T) (output T, err error) {

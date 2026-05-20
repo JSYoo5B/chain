@@ -2,9 +2,13 @@
 
 Full test code available: [collatz.go](collatz.go)
 
-Chain `Workflow`s support branching logic, enabling conditional execution paths where subsequent `Action`s depend on prior results. This feature is particularly useful for problems where outcomes vary based on specific conditions.
+Chain `Workflow`s support branching logic, enabling conditional execution paths
+where subsequent `Action`s depend on prior results. This is useful for problems
+where outcomes vary based on specific conditions.
 
-This document illustrates how to implement a branching workflow using the Collatz Conjecture as an example. The workflow processes an integer input, deciding the next step based on whether the number is odd or even.
+This document illustrates how to implement a branching workflow using the
+Collatz Conjecture as an example. The workflow processes an integer input,
+deciding the next step based on whether the number is odd or even.
 
 ## Collatz Conjecture to Workflow
 
@@ -15,7 +19,8 @@ f(n) = \begin{cases} n/2 &\text{if } n \equiv 0 \pmod{2},\\
 3n+1 & \text{if } n\equiv 1 \pmod{2} .\end{cases}
 $$
 
-Each arithmetic operation (division, multiplication, or addition) is represented as a separate Action. Below is the implementation:
+Each arithmetic operation is represented as a separate Action. Below is the
+implementation:
 
 ```golang
 func checkNext() chain.Action[int] {
@@ -86,7 +91,7 @@ func basicCollatzFunction() *chain.Workflow[int] {
     branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
     workflow := chain.NewWorkflow("SimpleCollatz", branch, even, odd1, odd2)
-    workflow.SetRunPlan(branch, chain.ActionPlan[int]{
+    workflow.SetRunPlan(branch, chain.RunPlan[int]{
         "even": even,
         "odd":  odd1,
     })
@@ -119,7 +124,8 @@ level=debug msg="chain: `Half` directs `success`, selecting `termination`" runne
 
 ## Shortcut form of the Collatz Conjecture to Workflow
 
-The odd-number case in the Collatz sequence ultimately transitions into an even number. Combining these two steps simplifies the process:
+The odd-number case in the Collatz sequence ultimately transitions into an even
+number. Combining these two steps simplifies the process:
 
 $$
 f(n) = \begin{cases} n/2 &\text{if } n \equiv 0 \pmod{2},\\
@@ -159,7 +165,7 @@ func shortcutCollatzFunction() *chain.Workflow[int] {
     branch, even, odd1, odd2 := checkNext(), half(), triple(), inc()
 
     workflow := chain.NewWorkflow("ShortcutCollatz", branch, even, odd1, odd2)
-    workflow.SetRunPlan(branch, chain.ActionPlan[int]{
+    workflow.SetRunPlan(branch, chain.RunPlan[int]{
         "even": even,
         "odd":  odd1,
     })
@@ -190,4 +196,3 @@ level=debug msg="chain: start running with `CheckNext`" runnerName=ShortcutColla
 level=debug msg="chain: `CheckNext` directs `even`, selecting `Half`" runnerName=ShortcutCollatz
 level=debug msg="chain: `Half` directs `success`, selecting `termination`" runnerName=ShortcutCollatz
 ```
-

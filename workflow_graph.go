@@ -11,7 +11,7 @@ type edgeDirection = string
 type cycleTrace = []string
 
 // ValidateGraph ensures the workflow's graph is connected and acyclic.
-// It checks for cycles first, then verifies that all nodes are connected as a single graph.
+// It checks for cycles first, then verifies that all nodes are connected.
 func (w *Workflow[T]) ValidateGraph() error {
 	runPlans := runPlanGraph[T](w.runPlans)
 
