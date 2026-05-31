@@ -2,69 +2,51 @@ package adapter
 
 import (
 	"context"
-	"github.com/JSYoo5B/chain"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/JSYoo5B/chain"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestTypeAdapterActions(t *testing.T) {
-	logrus.SetLevel(logrus.DebugLevel)
+func TestCartAdapter(t *testing.T) {
+	workflow := chain.NewWorkflow(
+		"CartAdapter",
+		customerToCart(newNormalizeCustomerAction("NormalizeCustomer")),
+		totalCentsToCart(newAddPriceAction("AddCoffeePrice", 1200)),
+		totalCentsToCart(newAddPriceAction("AddFilterPrice", 300)),
+	)
 
-	t.Run("simple type adapting workflow", func(t *testing.T) {
-		adaptedWorkflow := chain.NewWorkflow(
-			"ActionAdapterTest",
-			numberToPair(newIncAction("action1")),
-			messageToPair(newAppendAction("action2")),
-			numberToPair(newIncAction("action3")),
-			numberToPair(newIncAction("action4")),
-			messageToPair(newAppendAction("action5")),
-		)
-
-		input := Pair{number: 10, message: "f"}
-		// {10, f} -> {11, f} -> {11, fo} -> {12, fo} -> {13, fo} -> {13, foo}
-		output, err := adaptedWorkflow.Run(context.Background(), input)
-
-		assert.NoError(t, err)
-		assert.Equal(t, 13, output.number)
-		assert.Equal(t, "foo", output.message)
+	output, err := workflow.Run(context.Background(), cart{
+		customer:   "  Ada   Lovelace ",
+		totalCents: 0,
 	})
 
-	t.Run("different workflows adapted in workflow", func(t *testing.T) {
-		inc2Action := chain.NewWorkflow(
-			"Inc2Action",
-			newIncAction("inc1"),
-			newIncAction("inc2"),
-		)
-		append2Action := chain.NewWorkflow(
-			"Append2Action",
-			newAppendAction("append1"),
-			newAppendAction("append2"),
-		)
-		inc5Action := chain.NewWorkflow(
-			"Inc5Action",
-			newIncAction("inc3"),
-			newIncAction("inc4"),
-			newIncAction("inc5"),
-			newIncAction("inc6"),
-			newIncAction("inc7"),
-		)
+	require.NoError(t, err)
+	assert.Equal(t, "Ada Lovelace", output.customer)
+	assert.Equal(t, 1500, output.totalCents)
+}
 
-		adapter := chain.NewWorkflow(
-			"WorkflowAdapterTest",
-			numberToPair(inc2Action),
-			messageToPair(append2Action),
-			numberToPair(inc5Action),
-		)
+func TestWorkflowAdapter(t *testing.T) {
+	addBundle := chain.NewWorkflow(
+		"AddBundle",
+		newAddPriceAction("AddCoffeePrice", 1200),
+		newAddPriceAction("AddFilterPrice", 300),
+		newAddPriceAction("AddMugPrice", 1500),
+	)
 
-		input := Pair{number: 10, message: "f"}
-		// {10, f} -> {11, f} -> {12, f}
-		// -> {12, fo} -> {12, foo}
-		// -> {13, foo} -> {14, foo} -> {15, foo} -> {16, foo} -> {17, foo}
-		output, err := adapter.Run(context.Background(), input)
+	workflow := chain.NewWorkflow(
+		"BundleCart",
+		customerToCart(newNormalizeCustomerAction("NormalizeCustomer")),
+		totalCentsToCart(addBundle),
+	)
 
-		assert.NoError(t, err)
-		assert.Equal(t, 17, output.number)
-		assert.Equal(t, "foo", output.message)
+	output, err := workflow.Run(context.Background(), cart{
+		customer:   "  Grace   Hopper ",
+		totalCents: 500,
 	})
+
+	require.NoError(t, err)
+	assert.Equal(t, "Grace Hopper", output.customer)
+	assert.Equal(t, 3500, output.totalCents)
 }
