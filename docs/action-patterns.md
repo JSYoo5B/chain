@@ -28,6 +28,8 @@ defined base action.
 Custom directions must be declared by the branch action so the workflow can
 validate run plans.
 
+Runnable example: [`examples/branch`](../examples/branch).
+
 ## Best-Effort Work
 
 Use `AsBestEffortAction` for non-critical work that should not move the workflow
@@ -45,6 +47,8 @@ notify := chain.AsBestEffortAction(
 The wrapped action's output is still returned. Only the error is suppressed.
 Panics are not suppressed by best-effort handling.
 
+Runnable example: [`examples/errorcontrol`](../examples/errorcontrol).
+
 ## Retries and Rollback
 
 Use `AsRetryableAction` when an action should retry before the workflow handles
@@ -57,6 +61,8 @@ save := chain.AsRetryableAction("save", saveOnce, rollbackSave, 3)
 Rollback runs between attempts and does not run after the final failed attempt.
 If rollback is not needed, pass `SkipRollback[T]()`.
 
+Runnable example: [`examples/errorcontrol`](../examples/errorcontrol).
+
 ## Collection Processing
 
 Use sequence actions when order and deterministic execution are more important
@@ -66,6 +72,8 @@ Use parallel actions when each item can be processed independently.
 
 Parallel actions preserve slice indexes or map keys in their outputs. Error
 order is based on completion order and should not be used for control logic.
+
+Runnable example: [`examples/collection`](../examples/collection).
 
 ## Type Adaptation
 
@@ -87,3 +95,5 @@ workflowAction := chain.AdaptAction(
 
 The adapted action's output is written back through the setter before the
 adapted action returns.
+
+Runnable walkthrough: [`examples/adapter`](../examples/adapter).

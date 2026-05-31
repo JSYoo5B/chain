@@ -119,8 +119,15 @@ DAG.
 
 ## Examples
 
-See:
+Runnable examples live under [`examples`](./examples). They are regular Go
+tests, so they double as usage documentation and behavior coverage.
 
-- [`examples/branch`](./examples/branch)
-- [`examples/adapter`](./examples/adapter)
-- [`docs/action-patterns.md`](./docs/action-patterns.md)
+- [`examples/branch`](./examples/branch) shows custom directions and run plans.
+- [`examples/adapter`](./examples/adapter) shows adapting actions over smaller
+  value types into a workflow with aggregate state.
+- [`examples/errorcontrol`](./examples/errorcontrol) shows retry, rollback, and
+  best-effort actions.
+- [`examples/collection`](./examples/collection) shows sequential and parallel
+  slice/map processing.
+
+Additional notes are in [`docs/action-patterns.md`](./docs/action-patterns.md).
