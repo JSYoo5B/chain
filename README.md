@@ -124,3 +124,8 @@ See:
 - [`examples/branch`](./examples/branch)
 - [`examples/adapter`](./examples/adapter)
 - [`docs/action-patterns.md`](./docs/action-patterns.md)
+
+## Workflow DSL
+
+`chain-gen` generates Go workflow constructors from `.chain` files. See the
+[`DSL guide`](./docs/dsl.md) and [`Collatz source`](./examples/branch/collatz.chain).

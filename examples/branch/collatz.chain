@@ -1,0 +1,71 @@
+package branch
+
+import (
+    "context"
+    "github.com/JSYoo5B/chain"
+)
+
+workflow generatedBasicCollatzFunction() SimpleCollatz[int] {
+    prerequisite {
+        branch, even := checkNext(), half()
+        odd1, odd2 := triple(), inc()
+    }
+
+    nodes:
+        branch, even, odd1, odd2
+
+    branches:
+        branch -"even"-> even
+        branch -"odd"-> odd1
+
+    success:
+        even --> end
+        odd1 --> odd2 --> end
+}
+
+workflow generatedShortcutCollatzFunction() ShortcutCollatz[int] {
+    prerequisite {
+        branch, even := checkNext(), half()
+        odd1, odd2 := triple(), inc()
+    }
+
+    nodes:
+        branch, even, odd1, odd2
+
+    success:
+        end <-- even
+
+    branches:
+        branch -`even`-> even
+        branch -`odd`-> odd1
+
+    success:
+        odd1 --> odd2 --> even
+}
+
+// A leaf with no explicit plan must not inherit the constructor's next node.
+workflow generatedLeaf(first, leaf, alternate chain.Action[int]) Leaf[int] {
+    nodes:
+        first, leaf, alternate
+
+    success:
+        first --> leaf
+
+    failure:
+        first --> alternate
+}
+
+// DSL words remain ordinary identifiers inside Go code and node references.
+workflow generatedIncrement() Increment[int] {
+    prerequisite {
+        success := chain.NewSimpleAction("increment", func(_ context.Context, input int) (int, error) {
+            return input + 1, nil
+        })
+    }
+
+    nodes:
+        success
+
+    success:
+        success --> end
+}
