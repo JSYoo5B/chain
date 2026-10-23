@@ -45,6 +45,19 @@ func run(args []string, stdout, stderr io.Writer) error {
 		if inputPath == outputPath {
 			return fmt.Errorf("output must differ from the DSL input file")
 		}
+		inputInfo, err := os.Stat(inputPath)
+		if err != nil {
+			return err
+		}
+		outputInfo, err := os.Stat(outputPath)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		// Different paths may still refer to the input through links or the
+		// filesystem's case-insensitive name lookup. Reject before any write.
+		if err == nil && os.SameFile(inputInfo, outputInfo) {
+			return fmt.Errorf("output must differ from the DSL input file")
+		}
 		relative, err := filepath.Rel(filepath.Dir(outputPath), inputPath)
 		if err != nil {
 			return err

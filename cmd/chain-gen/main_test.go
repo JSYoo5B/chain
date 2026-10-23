@@ -21,6 +21,8 @@ func TestRunWritesOnlySuccessfulCompilation(t *testing.T) {
 	generated, err := os.ReadFile(output)
 	require.NoError(t, err)
 	assert.Equal(t, stdout.Bytes(), generated)
+	// A distinct existing output must remain writable on subsequent runs.
+	require.NoError(t, run([]string{"-o", output, input}, &stdout, &stderr))
 
 	require.NoError(t, os.WriteFile(input, []byte("package p\nworkflow broken() Flow[int] {}"), 0644))
 	stdout.Reset()
@@ -55,4 +57,41 @@ func TestRunMapsSourceRelativeToOutput(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(generated), "//line ../dsl/flow.chain:")
 	assert.NotContains(t, string(generated), dir)
+}
+
+func TestRunRejectsAliasedInputOutput(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		link    func(string, string) error
+		reverse bool
+	}{
+		{"input symlink", os.Symlink, true},
+		{"output symlink", os.Symlink, false},
+		{"hard link", os.Link, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			original, alias := filepath.Join(dir, "flow.chain"), filepath.Join(dir, "alias.chain")
+			const source = "package p\nworkflow Build(a Action) Flow[int] { nodes: a; success: a --> end }\n"
+			require.NoError(t, os.WriteFile(original, []byte(source), 0644))
+			require.NoError(t, tc.link(original, alias))
+			input, output := original, alias
+			if tc.reverse {
+				input, output = alias, original
+			}
+			var stdout, stderr bytes.Buffer
+			require.ErrorContains(t, run([]string{"-o", output, input}, &stdout, &stderr), "must differ")
+			assert.Empty(t, stdout.Bytes())
+			for _, path := range []string{original, alias} {
+				contents, err := os.ReadFile(path)
+				require.NoError(t, err)
+				assert.Equal(t, source, string(contents), "source changed at %s", path)
+			}
+			originalInfo, err := os.Stat(original)
+			require.NoError(t, err)
+			aliasInfo, err := os.Stat(alias)
+			require.NoError(t, err)
+			assert.True(t, os.SameFile(originalInfo, aliasInfo), "input/output alias was replaced")
+		})
+	}
 }
