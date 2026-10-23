@@ -4,6 +4,10 @@ This directory is a separate Go module. Its `go.mod` replaces
 `github.com/JSYoo5B/chain` with the repository root, so these examples use the
 checked-out implementation.
 
+For small examples of individual methods and builders, start with the
+[API example guide](../docs/examples.md). Those `Example...` functions live in
+the root package and can be run there with `go test -run '^Example' -v .`.
+
 From the repository root:
 
 ```sh

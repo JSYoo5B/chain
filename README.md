@@ -121,7 +121,17 @@ every node to be reachable from the entry node.
 
 ## Examples
 
-Examples are Go tests in the separate [`examples` module](./examples/README.md):
+The [small API examples](./docs/examples.md) cover actions, workflow methods,
+plan helpers, retries, collection processing, and type adaptation using simple
+arithmetic and strings. They use only the standard library and `chain`, and
+their expected outputs are checked by Go tests. From the repository root:
+
+```sh
+go test -run '^Example' -v .
+```
+
+The branching and type adaptation walkthroughs are Go tests in the separate
+[`examples` module](./examples/README.md):
 
 - [`Branching and Collatz`](./examples/branch/README.md) compares handwritten
   workflows with constructors generated from the DSL.

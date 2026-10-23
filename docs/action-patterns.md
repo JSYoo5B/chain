@@ -3,6 +3,9 @@
 This document describes patterns that are useful once a workflow needs more
 than a simple linear chain.
 
+The [small API examples](./examples.md) provide complete, executable versions
+using arithmetic and strings, with expected output for every example.
+
 ## Branching
 
 Use `AsBranchAction` when an existing action should also decide the next
@@ -29,6 +32,9 @@ Custom directions must be declared by the branch action so the workflow can
 configure their run plans. `NextDirection` runs after `Run` succeeds and receives
 the action's output. When `Run` returns an error, the workflow uses `Failure`
 without calling `NextDirection`. A recovered panic uses `Abort`.
+
+[Action and branch examples](./examples.md#actions-and-branches) show both a
+pass-through sign check and an increment followed by an even/odd check.
 
 The DSL uses the same direction strings in its `branches:` section. See the
 [DSL guide](./dsl.md#connections) and the
@@ -96,6 +102,10 @@ not run after the final failed attempt. A rollback error stops retries and is
 joined with the main action's error. If rollback is not needed, pass
 `SkipRollback[T]()`.
 
+The [retry examples](./examples.md#retries-and-best-effort-actions) use an add-one
+action and subtract-one rollback to show exactly which value reaches each
+attempt. The same section shows a fallback receiving the original input.
+
 ## Collection Processing
 
 Sequential slices visit items by index. `AsSequenceSliceAction` accepts a
@@ -109,6 +119,9 @@ wrapped action. The wrapped action must support those concurrent calls. Slice
 indexes and map keys are preserved in the output, and other items continue when
 one item fails or panics. Joined errors follow result arrival order and should
 not be used for control logic.
+
+The [slice and map examples](./examples.md#slices-and-maps) double numbers and
+uppercase short strings. A separate example compares both `stopOnError` values.
 
 ## Type Adaptation
 
