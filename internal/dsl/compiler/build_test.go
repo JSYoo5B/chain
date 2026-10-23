@@ -105,6 +105,38 @@ func writeBuildFile(t *testing.T, dir, path, text string) {
 	require.NoError(t, os.WriteFile(name, []byte(text), 0644))
 }
 
+// Compile real fixture files and execute their Go callers. Keeping the caller
+// separate from the DSL catches changes to constructor signatures and routing.
+func TestGeneratedGoSemantics(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", "..", ".."))
+	require.NoError(t, err)
+	dir := t.TempDir()
+	writeBuildFile(t, dir, "go.mod", fmt.Sprintf("module example.org/dsltest\n\ngo 1.24.0\nrequire github.com/JSYoo5B/chain v0.0.0\nreplace github.com/JSYoo5B/chain => %q\n", root))
+	for _, fixture := range []string{"routing", "parameters"} {
+		fixtureDir := filepath.Join("testdata", fixture)
+		entries, err := os.ReadDir(fixtureDir)
+		require.NoError(t, err)
+		for _, entry := range entries {
+			path := filepath.Join(fixtureDir, entry.Name())
+			contents, err := os.ReadFile(path)
+			require.NoError(t, err)
+			writeBuildFile(t, dir, filepath.Join(fixture, entry.Name()), string(contents))
+			if filepath.Ext(entry.Name()) == ".chain" {
+				generated, err := Compile(entry.Name(), contents)
+				require.NoError(t, err, path)
+				name := strings.TrimSuffix(entry.Name(), ".chain") + "_chain.gen.go"
+				writeBuildFile(t, dir, filepath.Join(fixture, name), string(generated))
+			}
+		}
+	}
+	cmd := exec.Command("go", "test", "-count=1", "-v", "./...")
+	cmd.Dir = dir
+	cmd.Env = append(os.Environ(), "GOWORK=off", "GOFLAGS=-mod=mod")
+	output, err := cmd.CombinedOutput()
+	require.NoError(t, err, "%s", output)
+	t.Logf("%s", output)
+}
+
 func TestGeneratedGoBuildDiagnostics(t *testing.T) {
 	root, err := filepath.Abs(filepath.Join("..", "..", ".."))
 	require.NoError(t, err)

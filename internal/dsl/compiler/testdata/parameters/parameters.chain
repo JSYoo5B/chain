@@ -1,0 +1,29 @@
+package parameters
+
+import (
+    "context"
+    "github.com/JSYoo5B/chain"
+)
+
+workflow Build(
+    a, b int,
+    callback func(int) error, // DSL words and delimiters in comments: nodes: } -->
+    options ...Option,
+) Arguments[int] {
+    prerequisite {
+        settings := config{offset: a + b}
+        for _, option := range options {
+            option(&settings)
+        }
+        step := chain.NewSimpleAction("step", func(_ context.Context, input int) (int, error) {
+            output := input + settings.offset
+            return output, callback(output)
+        })
+    }
+
+    nodes:
+        step
+
+    success:
+        step --> end
+}

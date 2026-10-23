@@ -1,0 +1,30 @@
+package routing
+
+import "github.com/JSYoo5B/chain"
+
+workflow BuildRoutes(start, onSuccess, onFailure, onAbort, quoted, raw chain.Action[int]) Routes[int] {
+    nodes:
+        start, onSuccess, onFailure, onAbort, quoted, raw
+
+    success:
+        start --> onSuccess
+
+    failure:
+        onFailure <-- start
+
+    abort:
+        start --> onAbort
+
+    branches:
+        start -"quoted\n\"label\""-> quoted
+        start -`raw "label"`-> raw
+}
+
+// Every unlisted direction must terminate instead of using default sequencing.
+workflow BuildFallback(start, next chain.Action[int]) Fallback[int] {
+    nodes:
+        start, next
+
+    success:
+        start --> next
+}

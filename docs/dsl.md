@@ -121,6 +121,14 @@ checks that the committed generated file matches its `.chain` source.
 
 The root tests also build and run temporary Go packages for type and package
 shadowing, generated-name collisions, trailing labels, and closures. Negative
-build tests verify diagnostics against original source lines. The Linux CI
-workflow runs root and example tests, vet, regeneration checks, and a bounded
+build tests verify diagnostics against original source lines. Fixtures under
+`internal/dsl/compiler/testdata` compare generated and handwritten workflows
+using node execution order, final output, and preserved error causes. They cover
+failure and abort routing, quoted and raw branches, selector errors and panics,
+and termination for unlisted directions. Separate Go callers exercise grouped
+parameters, function callbacks, and both explicit and expanded variadic options.
+These fixtures are compiled and executed by `TestGeneratedGoSemantics`; they
+are not standalone Go packages until their `.chain` constructors are generated.
+
+The Linux CI workflow runs root and example tests, vet, regeneration checks, and a bounded
 compiler fuzz run using Go 1.26 and the current stable toolchain.
