@@ -28,6 +28,21 @@ func (g *GoSyntax) Position(pos token.Pos) token.Position {
 	return g.input.position(g.file.Offset(pos))
 }
 
+func remapGoErrors(err error, position func(int) token.Position) error {
+	var diagnostics scanner.ErrorList
+	if list, ok := err.(scanner.ErrorList); ok {
+		for _, diagnostic := range list {
+			diagnostics.Add(position(diagnostic.Pos.Offset), diagnostic.Msg)
+		}
+	} else {
+		diagnostics.Add(position(0), err.Error())
+	}
+	// go/parser sorts by positions adjusted by //line directives. Restore
+	// physical source order after mapping all diagnostics back to the DSL.
+	diagnostics.Sort()
+	return diagnostics.Err()
+}
+
 // Each copied segment has an original span. Synthetic segments have an empty
 // original span at the delimiter or boundary that should receive diagnostics.
 type goSegment struct {
@@ -95,18 +110,7 @@ func parseGo(source *Source, parameters, stateType GoRegion, prerequisite *GoReg
 	file, err := parser.ParseFile(fset, "__chain_embedded.go", input.text.Bytes(),
 		parser.AllErrors|parser.ParseComments|parser.SkipObjectResolution)
 	if err != nil {
-		var diagnostics scanner.ErrorList
-		if list, ok := err.(scanner.ErrorList); ok {
-			for _, diagnostic := range list {
-				diagnostics.Add(input.position(diagnostic.Pos.Offset), diagnostic.Msg)
-			}
-		} else {
-			diagnostics.Add(source.Position(parameters.Span.Start), err.Error())
-		}
-		// go/parser sorts by positions adjusted by //line directives. Restore
-		// physical source order after mapping all diagnostics back to the DSL.
-		diagnostics.Sort()
-		return nil, diagnostics.Err()
+		return nil, remapGoErrors(err, input.position)
 	}
 
 	fn := file.Decls[0].(*ast.FuncDecl)
