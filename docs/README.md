@@ -5,10 +5,9 @@ The guides here describe the implementation on main.
 
 | Guide | Contents |
 | --- | --- |
-| [Small API examples](./examples.md) | Simple, executable examples for the public builders, workflow methods, and plan helpers |
+| [Examples](../examples/README.md) | Scenario packages with implementation code, executable examples, and their own READMEs |
 | [Workflow DSL](./dsl.md) | Generate Go from `.chain` files, Go parameters and prerequisites, connections, diagnostics, and verification |
 | [Action patterns](./action-patterns.md) | Branching, failure and abort routing, retries, best-effort actions, collections, and type adaptation |
-| [Runnable examples](../examples/README.md) | Commands for the separate examples module and links to its tests |
 | [Collatz walkthrough](../examples/branch/README.md) | Handwritten and generated branching workflows with the same behavior |
 
 The public API is described alongside its implementation in

@@ -3,8 +3,9 @@
 This document describes patterns that are useful once a workflow needs more
 than a simple linear chain.
 
-The [small API examples](./examples.md) provide complete, executable versions
-using arithmetic and strings, with expected output for every example.
+The [example packages](../examples/README.md) provide small scenarios using
+arithmetic and strings. Each has its own implementation, executable examples,
+and README explaining the result.
 
 ## Branching
 
@@ -33,8 +34,8 @@ configure their run plans. `NextDirection` runs after `Run` succeeds and receive
 the action's output. When `Run` returns an error, the workflow uses `Failure`
 without calling `NextDirection`. A recovered panic uses `Abort`.
 
-[Action and branch examples](./examples.md#actions-and-branches) show both a
-pass-through sign check and an increment followed by an even/odd check.
+[Small branch examples](../examples/branch/README.md#small-branch-examples) show
+both a pass-through sign check and an increment followed by an even/odd check.
 
 The DSL uses the same direction strings in its `branches:` section. See the
 [DSL guide](./dsl.md#connections) and the
@@ -67,6 +68,9 @@ once and returns its result without looking up a next action.
 Use `ValidateGraph` explicitly for handwritten workflows. It checks directed
 cycles and weak connectivity across all configured directions. The DSL generator
 performs these structural checks before emitting Go.
+
+The [arithmetic workflows](../examples/numbers/README.md) use these plans to skip
+double, stop a leaf, add ten after a failure, or reset a negative result to zero.
 
 ## Best-Effort Work
 
@@ -102,9 +106,9 @@ not run after the final failed attempt. A rollback error stops retries and is
 joined with the main action's error. If rollback is not needed, pass
 `SkipRollback[T]()`.
 
-The [retry examples](./examples.md#retries-and-best-effort-actions) use an add-one
-action and subtract-one rollback to show exactly which value reaches each
-attempt. The same section shows a fallback receiving the original input.
+The [counter example](../examples/errorcontrol/README.md) uses an add-one action
+and subtract-one rollback to show exactly which value reaches each attempt.
+The same package shows a fallback receiving the original input.
 
 ## Collection Processing
 
@@ -120,8 +124,8 @@ indexes and map keys are preserved in the output, and other items continue when
 one item fails or panics. Joined errors follow result arrival order and should
 not be used for control logic.
 
-The [slice and map examples](./examples.md#slices-and-maps) double numbers and
-uppercase short strings. A separate example compares both `stopOnError` values.
+The [collection examples](../examples/collection/README.md) double numbers and
+uppercase short strings. A separate scenario compares both `stopOnError` values.
 
 ## Type Adaptation
 

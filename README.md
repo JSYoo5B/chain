@@ -121,24 +121,21 @@ every node to be reachable from the entry node.
 
 ## Examples
 
-The [small API examples](./docs/examples.md) cover actions, workflow methods,
-plan helpers, retries, collection processing, and type adaptation using simple
-arithmetic and strings. They use only the standard library and `chain`, and
-their expected outputs are checked by Go tests. From the repository root:
+Examples live in the separate [`examples` module](./examples/README.md),
+organized by subject. Each package contains its scenario implementation,
+executable examples or tests, and a README:
 
-```sh
-go test -run '^Example' -v .
-```
+- [Numbers](./examples/numbers/README.md): simple arithmetic workflows and run plans.
+- [Branching](./examples/branch/README.md): sign checks, parity, and Collatz.
+- [Error control](./examples/errorcontrol/README.md): an addition counter with
+  retries, rollback, and optional failure handling.
+- [Collections](./examples/collection/README.md): small slices and maps of
+  numbers or words.
+- [Type adaptation](./examples/adapter/README.md): change one struct field while
+  retaining the others.
 
-The branching and type adaptation walkthroughs are Go tests in the separate
-[`examples` module](./examples/README.md):
-
-- [`Branching and Collatz`](./examples/branch/README.md) compares handwritten
-  workflows with constructors generated from the DSL.
-- [`Type adaptation`](./examples/adapter) combines integer and string actions
-  in an aggregate state.
-
-From the repository root:
+The small scenarios use only the standard library and `chain`. From the
+repository root:
 
 ```sh
 cd examples

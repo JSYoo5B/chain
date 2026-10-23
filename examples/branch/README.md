@@ -14,6 +14,25 @@ deciding the next step based on whether the number is odd or even.
 Each `Run` applies one basic or shortcut Collatz step. For input `5`, the basic
 workflow produces `16` and the shortcut workflow produces `8`.
 
+## Small branch examples
+
+The [small implementations](./small.go) and [executable examples](./small_test.go)
+show the two branch builders before using them in a workflow:
+
+- `checkSign` uses `NewSimpleBranchAction` with a nil run function. Input `-2`
+  passes through unchanged and selects `negative`.
+- `incrementAndCheckParity` uses `AsBranchAction` around the existing increment
+  action. Input `3` becomes `4`, and the selector chooses `even` from that output.
+
+These examples call `Run` and `NextDirection` separately to make the values
+visible. The workflows below perform the routing calls automatically.
+
+From the `examples` module:
+
+```sh
+go test ./branch -run Example -v
+```
+
 ## DSL Version
 
 The same workflows are declared in [collatz.chain](./collatz.chain) and generated
