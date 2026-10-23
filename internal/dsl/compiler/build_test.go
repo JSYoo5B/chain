@@ -88,7 +88,7 @@ func TestRun(t *testing.T) {
     if err := w.ValidateGraph(); err != nil { t.Fatal(err) }
     got, err := w.Run(context.Background(), %s)
     if err != nil { t.Fatal(err) }
-    if want := %s; got != want { t.Fatalf("got %%v, want %%v", got, want) }
+    if want := (%s); got != want { t.Fatalf("got %%v, want %%v", got, want) }
 }`, tc.imports, tc.call, tc.input, tc.want))
 	}
 	cmd := exec.Command("go", "test", "-count=1", "./...")
