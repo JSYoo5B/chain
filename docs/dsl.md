@@ -51,6 +51,11 @@ then `go/parser` to build their AST. No ANTLR runtime is required. Diagnostics
 refer to the original `.chain` file, including when Go code contains `//line`
 directives.
 
+Generated Go also carries `//line` directives so Go build diagnostics refer to
+the original `.chain` filename and line. Columns after Go formatting are not
+guaranteed to match the original text. User-written line directives are kept as
+ordinary comments in generated code so they cannot override this mapping.
+
 ## Connections
 
 `success:`, `failure:`, and `abort:` select built-in directions. Both `a --> b`
@@ -94,6 +99,13 @@ Go imports are preserved. The generated file must build as ordinary Go:
 undefined symbols, unused imports, and incompatible action types are reported
 by the Go toolchain. Runtime action configuration checks still apply.
 
+The generator resolves each state type in a private package-level alias before
+emitting its constructor. A parameter named `int`, or a prerequisite variable
+that shadows a state type or imported package, cannot change the types used by
+the generated run plans. Source paths in diagnostics are relative to the output
+directory, allowing generated files to be committed without machine-specific
+absolute paths.
+
 The runnable Collatz example is in `examples/branch/collatz.chain`. From the
 `examples` module:
 
@@ -106,3 +118,9 @@ Its generated constructors are compared with the handwritten Collatz workflows.
 A separate example verifies that a node without outgoing connections terminates
 instead of falling through to the next declared node. The root test suite also
 checks that the committed generated file matches its `.chain` source.
+
+The root tests also build and run temporary Go packages for type and package
+shadowing, generated-name collisions, trailing labels, and closures. Negative
+build tests verify diagnostics against original source lines. The Linux CI
+workflow runs root and example tests, vet, regeneration checks, and a bounded
+compiler fuzz run using Go 1.26 and the current stable toolchain.

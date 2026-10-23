@@ -32,6 +32,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return fmt.Errorf("usage: chain-gen [-o output.go] input.chain")
 	}
 	input := flags.Arg(0)
+	options := compiler.Options{}
 	if *output != "" {
 		inputPath, err := filepath.Abs(input)
 		if err != nil {
@@ -44,12 +45,17 @@ func run(args []string, stdout, stderr io.Writer) error {
 		if inputPath == outputPath {
 			return fmt.Errorf("output must differ from the DSL input file")
 		}
+		relative, err := filepath.Rel(filepath.Dir(outputPath), inputPath)
+		if err != nil {
+			return err
+		}
+		options.SourceName = filepath.ToSlash(relative)
 	}
 	text, err := os.ReadFile(input)
 	if err != nil {
 		return err
 	}
-	generated, err := compiler.Compile(input, text)
+	generated, err := compiler.CompileWithOptions(input, text, options)
 	if err != nil {
 		return err
 	}

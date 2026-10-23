@@ -31,6 +31,9 @@ func (s *Source) Text(span Span) string {
 	return string(s.text[span.Start:span.End])
 }
 
+// Size is the original source length in bytes.
+func (s *Source) Size() int { return len(s.text) }
+
 // Position resolves an offset without applying Go //line directives.
 func (s *Source) Position(offset int) token.Position {
 	return s.file.PositionFor(s.file.Pos(offset), false)

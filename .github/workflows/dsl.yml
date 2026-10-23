@@ -1,0 +1,48 @@
+name: DSL validation
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dsl-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.26.x', stable]
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go }}
+          cache-dependency-path: |
+            go.sum
+            examples/go.sum
+      - name: Test root module and generated Go packages
+        run: go test ./...
+      - name: Vet root module
+        run: go vet ./...
+      - name: Fuzz the compiler
+        if: matrix.go == 'stable'
+        run: go test ./internal/dsl/compiler -run '^$' -fuzz '^FuzzCompile$' -fuzztime=10s -parallel=2
+      - name: Regenerate and verify examples
+        working-directory: examples
+        run: |
+          go generate ./branch
+          git diff --exit-code
+          go test ./...
+          go vet ./...

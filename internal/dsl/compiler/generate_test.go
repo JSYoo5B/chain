@@ -38,8 +38,8 @@ workflow build(_workflow _chain.Action[int], _workflow1 int) Scope[int] {
 	_, err = parser.ParseFile(token.NewFileSet(), "scope.go", generated, parser.AllErrors)
 	require.NoError(t, err)
 	assert.Contains(t, string(generated), `import _chain2 "github.com/JSYoo5B/chain"`)
-	assert.Contains(t, string(generated), "_workflow2 := _chain2.NewWorkflow[int]")
-	assert.Contains(t, string(generated), `_chain2.Terminate[int]()`)
+	assert.Contains(t, string(generated), "_workflow2 := _chain2.NewWorkflow[_chainState_build]")
+	assert.Contains(t, string(generated), `_chain2.Terminate[_chainState_build]()`)
 }
 
 func TestCompileQuotesBranchDirections(t *testing.T) {
@@ -62,7 +62,7 @@ workflow build(a Action) Labeled[int] {
 	require.NoError(t, err)
 	_, err = parser.ParseFile(token.NewFileSet(), "labeled.go", generated, parser.AllErrors)
 	require.NoError(t, err)
-	assert.Contains(t, string(generated), "done:\n\t;")
+	assert.Contains(t, string(generated), "done:")
 }
 
 func TestCompileDoesNotReturnCodeOnError(t *testing.T) {
@@ -75,4 +75,24 @@ func TestCompileDoesNotReturnCodeOnError(t *testing.T) {
 		require.Error(t, err)
 		assert.Nil(t, generated)
 	}
+}
+
+func FuzzCompile(f *testing.F) {
+	for _, seed := range []string{
+		"", "package p\n",
+		"package p\nworkflow Build(a Action) Flow[int] { nodes: a; success: a --> end }",
+		"package p\nworkflow Build(a Action) Flow[int] { prerequisite { goto done; done: }; nodes: a; success: a --> end }",
+		"package p\nworkflow Build(a Action) Flow[int] { nodes: a; branches: a -`done`-> end }",
+	} {
+		f.Add([]byte(seed))
+	}
+	f.Fuzz(func(t *testing.T, source []byte) {
+		generated, err := Compile("fuzz.chain", source)
+		if err != nil {
+			require.Nil(t, generated)
+			return
+		}
+		_, err = parser.ParseFile(token.NewFileSet(), "fuzz.go", generated, parser.AllErrors)
+		require.NoError(t, err, "%s", generated)
+	})
 }

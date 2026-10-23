@@ -41,3 +41,18 @@ func TestRunRejectsInvalidArguments(t *testing.T) {
 	require.ErrorContains(t, run([]string{"-o", "same.chain", "same.chain"}, &stdout, &stderr), "must differ")
 	assert.Empty(t, stdout.Bytes())
 }
+
+func TestRunMapsSourceRelativeToOutput(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "dsl"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "generated"), 0755))
+	input := filepath.Join(dir, "dsl", "flow.chain")
+	output := filepath.Join(dir, "generated", "flow.go")
+	require.NoError(t, os.WriteFile(input, []byte("package p\nworkflow Build(a Action) Flow[int] { nodes: a; success: a --> end }"), 0644))
+	var stdout, stderr bytes.Buffer
+	require.NoError(t, run([]string{"-o", output, input}, &stdout, &stderr))
+	generated, err := os.ReadFile(output)
+	require.NoError(t, err)
+	assert.Contains(t, string(generated), "//line ../dsl/flow.chain:")
+	assert.NotContains(t, string(generated), dir)
+}
