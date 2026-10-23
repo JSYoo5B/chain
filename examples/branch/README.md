@@ -1,6 +1,7 @@
 # Branching in Chain: A Case Study with Collatz Conjecture
 
-Full test code available: [collatz.go](collatz.go)
+Implementation: [collatz.go](./collatz.go). Tests:
+[branch_test.go](./branch_test.go) and [dsl_test.go](./dsl_test.go).
 
 Chain `Workflow`s support branching logic, enabling conditional execution paths
 where subsequent `Action`s depend on prior results. This is useful for problems
@@ -9,6 +10,53 @@ where outcomes vary based on specific conditions.
 This document illustrates how to implement a branching workflow using the
 Collatz Conjecture as an example. The workflow processes an integer input,
 deciding the next step based on whether the number is odd or even.
+
+Each `Run` applies one basic or shortcut Collatz step. For input `5`, the basic
+workflow produces `16` and the shortcut workflow produces `8`.
+
+## DSL Version
+
+The same workflows are declared in [collatz.chain](./collatz.chain) and generated
+into [collatz_chain.gen.go](./collatz_chain.gen.go). For example, the basic form is:
+
+```go
+workflow generatedBasicCollatzFunction() SimpleCollatz[int] {
+    prerequisite {
+        branch, even := checkNext(), half()
+        odd1, odd2 := triple(), inc()
+    }
+
+    nodes:
+        branch, even, odd1, odd2
+
+    branches:
+        branch -"even"-> even
+        branch -"odd"-> odd1
+
+    success:
+        even --> end
+        odd1 --> odd2 --> end
+}
+```
+
+The Go helpers below are shared by the handwritten and generated constructors.
+The first listed node is the entry point. The quoted branch labels match the
+directions returned by `checkNext`; a leaf with no listed outgoing connection
+terminates. See the [DSL guide](../../docs/dsl.md) for the complete file syntax
+and prerequisite return rules.
+
+From the repository root, regenerate and run the package's tests:
+
+```sh
+cd examples
+go generate ./branch
+go test ./branch -run 'TestBranchingWorkflow|TestGenerated' -v
+```
+
+`TestGeneratedCollatzMatchesManual` compares both forms for negative, zero, odd,
+and even inputs. The other generated examples verify that a leaf terminates
+without falling through to the next listed node and that returns inside
+prerequisite closures work.
 
 ## Collatz Conjecture to Workflow
 

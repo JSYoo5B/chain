@@ -107,25 +107,65 @@ actions only operate on one part of that state.
 
 ## Validation
 
-`Workflow.ValidateGraph` checks the configured workflow graph before execution.
+Call `Workflow.ValidateGraph` explicitly to check a handwritten workflow before
+execution; `Run` does not call it automatically.
 
 It rejects:
 
 - directed cycles
 - disconnected workflow graphs
 
-Branching and merge points are allowed as long as the graph remains a connected
-DAG.
+Branching and merge points are allowed. Connectivity is weak: every node must
+belong to one component when edge directions are ignored. This does not require
+every node to be reachable from the entry node.
 
 ## Examples
 
-See:
+Examples are Go tests in the separate [`examples` module](./examples/README.md):
 
-- [`examples/branch`](./examples/branch)
-- [`examples/adapter`](./examples/adapter)
-- [`docs/action-patterns.md`](./docs/action-patterns.md)
+- [`Branching and Collatz`](./examples/branch/README.md) compares handwritten
+  workflows with constructors generated from the DSL.
+- [`Type adaptation`](./examples/adapter) combines integer and string actions
+  in an aggregate state.
+
+From the repository root:
+
+```sh
+cd examples
+go generate ./branch
+go test ./...
+```
+
+The root module's `go test ./...` does not include the examples module.
 
 ## Workflow DSL
 
-`chain-gen` generates Go workflow constructors from `.chain` files. See the
-[`DSL guide`](./docs/dsl.md) and [`Collatz source`](./examples/branch/collatz.chain).
+`chain-gen` generates Go workflow constructors from `.chain` files:
+
+```go
+package example
+
+import "github.com/JSYoo5B/chain"
+
+workflow Build(first, second chain.Action[int]) Linear[int] {
+    nodes: first, second
+    success: first --> second --> end
+}
+```
+
+The declaration generates a Go constructor named `Build` returning
+`*chain.Workflow[int]`. Constructor parameters and `prerequisite` statements use
+Go syntax. A return inside a closure is allowed; returning from the prerequisite
+itself is rejected. Nodes require explicit connections, and omitted supported
+directions terminate instead of following declaration order.
+
+From a checkout of this repository:
+
+```sh
+go run ./cmd/chain-gen -o path/workflow_chain.gen.go path/workflow.chain
+```
+
+See the [DSL guide](./docs/dsl.md) for a complete generate-and-test example,
+branch syntax, diagnostics, and input-file protection. The
+[documentation index](./docs/README.md) also links the action patterns and
+runnable examples.

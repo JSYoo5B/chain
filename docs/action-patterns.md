@@ -26,7 +26,41 @@ Use `NewSimpleBranchAction` when the branch node does not need a separately
 defined base action.
 
 Custom directions must be declared by the branch action so the workflow can
-validate run plans.
+configure their run plans. `NextDirection` runs after `Run` succeeds and receives
+the action's output. When `Run` returns an error, the workflow uses `Failure`
+without calling `NextDirection`. A recovered panic uses `Abort`.
+
+The DSL uses the same direction strings in its `branches:` section. See the
+[DSL guide](./dsl.md#connections) and the
+[Collatz comparison](../examples/branch/README.md#dsl-version).
+
+## Failure and Abort Routing
+
+For a workflow with multiple members, `Run` starts at the first member and uses
+the same routing loop as `RunAt`. Built-in directions are available on every
+node, and `BranchAction` can declare additional directions. `SetRunPlan` fills
+omitted supported directions with termination; it replaces the previous plan.
+
+| Plan helper | Success | Failure | Abort |
+| --- | --- | --- | --- |
+| `SuccessOnlyPlan(next)` | `next` | terminate | terminate |
+| `DefaultPlan(next, handler)` | `next` | `handler` | terminate |
+| `DefaultPlanWithAbort(next, handler, abortHandler)` | `next` | `handler` | `abortHandler` |
+| `TerminationPlan[T]()` | terminate | terminate | terminate |
+
+An abort handler can run when configured. Routing through a failure or abort
+handler does not clear the original error: routed execution joins action and
+selection errors, so callers can use `errors.Is` to inspect their causes. A
+selector may also return a direction together with an error; that direction is
+followed and the error is retained.
+
+If a selector returns a direction absent from the plan, routed execution stops
+with a selection error. `Run` on a single-member workflow runs that one action
+once and returns its result without looking up a next action.
+
+Use `ValidateGraph` explicitly for handwritten workflows. It checks directed
+cycles and weak connectivity across all configured directions. The DSL generator
+performs these structural checks before emitting Go.
 
 ## Best-Effort Work
 
@@ -42,8 +76,9 @@ notify := chain.AsBestEffortAction(
 )
 ```
 
-The wrapped action's output is still returned. Only the error is suppressed.
-Panics are not suppressed by best-effort handling.
+The wrapped action's output is still returned. The fallback receives the original
+input, and only the returned error is suppressed. This wrapper does not recover
+a panic raised by the wrapped action or fallback.
 
 ## Retries and Rollback
 
@@ -54,18 +89,26 @@ the failure.
 save := chain.AsRetryableAction("save", saveOnce, rollbackSave, 3)
 ```
 
-Rollback runs between attempts and does not run after the final failed attempt.
-If rollback is not needed, pass `SkipRollback[T]()`.
+The numeric argument is the total attempt budget, including the first call.
+Here, the action gets at most three attempts and rollback runs at most twice.
+Each attempt uses the output of the preceding action or rollback. Rollback does
+not run after the final failed attempt. A rollback error stops retries and is
+joined with the main action's error. If rollback is not needed, pass
+`SkipRollback[T]()`.
 
 ## Collection Processing
 
-Use sequence actions when order and deterministic execution are more important
-than throughput.
+Sequential slices visit items by index. `AsSequenceSliceAction` accepts a
+`stopOnError` argument: `true` stops at the first error, while `false` continues
+and joins errors. Sequential maps process one value at a time, but Go map
+iteration order and the resulting error order are unspecified. Both sequential
+wrappers stop on panic and keep unprocessed values unchanged.
 
-Use parallel actions when each item can be processed independently.
-
-Parallel actions preserve slice indexes or map keys in their outputs. Error
-order is based on completion order and should not be used for control logic.
+Parallel actions process independent items using concurrent calls to the same
+wrapped action. The wrapped action must support those concurrent calls. Slice
+indexes and map keys are preserved in the output, and other items continue when
+one item fails or panics. Joined errors follow result arrival order and should
+not be used for control logic.
 
 ## Type Adaptation
 
@@ -86,4 +129,5 @@ workflowAction := chain.AdaptAction(
 ```
 
 The adapted action's output is written back through the setter before the
-adapted action returns.
+adapted action returns, including when that action returns an error. A runnable
+example is in [`examples/adapter`](../examples/adapter).
